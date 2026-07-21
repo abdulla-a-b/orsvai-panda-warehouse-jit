@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ORSVAI — Project Development Accountability Board</title>
+<meta name="description" content="ORSVAI Excellence Accountability Framework — department-wise project development task board for management review." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  /* ORSVAI role accents (native to the framework) */
+  --o:#2563EB; --r:#16A34A; --s:#EA580C; --v:#7C3AED; --a:#0D9488; --i:#0EA5E9;
+  --o-soft:#E5EDFE; --r-soft:#E3F3E9; --s-soft:#FDEBE0; --v-soft:#EEE7FB; --a-soft:#E0F2F0; --i-soft:#E2F4FC;
+  /* status / scoring */
+  --done:#16A34A; --prog:#2563EB; --delay:#F59E0B; --notstart:#EF4444;
+  /* shell */
+  --ink:#16243E; --ink-deep:#0F1B30; --bg:#EEF1F6; --panel:#FFFFFF;
+  --text:#1E293B; --muted:#647488; --hair:#E4E8EF; --hair-2:#EDF0F5;
+  --shadow:0 1px 2px rgba(16,33,64,.05),0 8px 24px rgba(16,33,64,.06);
+  --shadow-lg:0 12px 40px rgba(16,33,64,.14);
+  --radius:14px; --radius-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,.disp{font-family:'Sora',sans-serif;letter-spacing:-.02em}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* ---------- Top shell ---------- */
+.shell{background:linear-gradient(135deg,var(--ink-deep),var(--ink));color:#fff}
+.shell-inner{max-width:1320px;margin:0 auto;padding:18px 26px}
+.brand-row{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:16px}
+.brand .logo{font-family:'Sora';font-weight:800;font-size:34px;line-height:1;letter-spacing:.01em}
+.brand .logo span:nth-child(1){color:#fff}
+.brand-sub{font-size:12.5px;color:#A9B6CC;font-weight:500;max-width:230px;border-left:2px solid rgba(255,255,255,.18);padding-left:14px}
+.brand-sub b{color:#fff;font-weight:600}
+.kpibar{display:flex;gap:10px;flex-wrap:wrap}
+.kpi-chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:11px;padding:9px 14px;min-width:104px}
+.kpi-chip .v{font-family:'Sora';font-weight:700;font-size:21px;line-height:1}
+.kpi-chip .l{font-size:10.5px;color:#9FB0CA;text-transform:uppercase;letter-spacing:.07em;margin-top:4px}
+
+/* ---------- ORSVAI rail (signature) ---------- */
+.rail{max-width:1320px;margin:0 auto;padding:0 26px}
+.rail-track{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);margin-top:-26px;position:relative;z-index:2;display:flex;align-items:stretch;overflow:hidden;border:1px solid var(--hair)}
+.rail-node{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px 13px;position:relative;text-align:center}
+.rail-node:not(:last-child)::after{content:"";position:absolute;right:-9px;top:50%;width:18px;height:18px;transform:translateY(-50%) rotate(45deg);background:var(--panel);border-top:1px solid var(--hair);border-right:1px solid var(--hair);z-index:3}
+.rail-badge{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:'Sora';font-weight:800;font-size:16px}
+.rail-name{font-family:'Sora';font-weight:700;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+.rail-role{font-size:10.5px;color:var(--muted);line-height:1.25;max-width:150px}
+.r-o .rail-badge{background:var(--o)} .r-o .rail-name{color:var(--o)}
+.r-r .rail-badge{background:var(--r)} .r-r .rail-name{color:var(--r)}
+.r-s .rail-badge{background:var(--s)} .r-s .rail-name{color:var(--s)}
+.r-v .rail-badge{background:var(--v)} .r-v .rail-name{color:var(--v)}
+.r-a .rail-badge{background:var(--a)} .r-a .rail-name{color:var(--a)}
+.r-i .rail-badge{background:var(--i)} .r-i .rail-name{color:var(--i)}
+
+/* ---------- Tabs ---------- */
+.tabs{max-width:1320px;margin:22px auto 0;padding:0 26px;display:flex;gap:6px;flex-wrap:wrap}
+.tab{appearance:none;border:1px solid var(--hair);background:var(--panel);color:var(--muted);font-family:'Sora';font-weight:600;font-size:13.5px;padding:11px 18px;border-radius:11px 11px 0 0;cursor:pointer;display:flex;align-items:center;gap:9px;transition:.16s;border-bottom:none}
+.tab .n{font-family:'JetBrains Mono';font-weight:700;font-size:11px;background:var(--bg);color:var(--muted);border-radius:6px;padding:2px 7px}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--ink);box-shadow:0 -3px 0 var(--ink) inset;background:var(--panel)}
+.tab.active .n{background:var(--ink);color:#fff}
+
+/* ---------- Layout ---------- */
+main{max-width:1320px;margin:0 auto;padding:0 26px 70px}
+.view{display:none;animation:fade .3s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel{background:var(--panel);border:1px solid var(--hair);border-radius:0 var(--radius) var(--radius) var(--radius);box-shadow:var(--shadow);padding:26px}
+.panel.flat{border-radius:var(--radius)}
+.view-head{margin-bottom:22px}
+.view-head h2{font-size:22px;color:var(--ink);font-weight:700}
+.view-head p{color:var(--muted);font-size:13.5px;margin-top:4px;max-width:760px}
+.eyebrow{font-family:'JetBrains Mono';font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--s);margin-bottom:7px}
+
+/* ---------- Forms ---------- */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:7px}
+.field .hint{font-size:11px;color:var(--muted);font-weight:400}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--text);background:#fff;border:1.5px solid var(--hair);border-radius:var(--radius-sm);padding:10px 12px;transition:.15s;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--o);box-shadow:0 0 0 3px var(--o-soft)}
+textarea{resize:vertical;min-height:72px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+/* ORSVAI assignment grid */
+.orsvai-assign{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:4px}
+.oa-cell{border:1.5px solid var(--hair);border-radius:var(--radius-sm);padding:10px;display:flex;flex-direction:column;gap:7px}
+.oa-cell .tag{display:flex;align-items:center;gap:6px;font-family:'Sora';font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase}
+.oa-cell .b{width:20px;height:20px;border-radius:50%;color:#fff;display:grid;place-items:center;font-family:'Sora';font-weight:800;font-size:11px}
+.oa-cell input{font-size:12.5px;padding:7px 9px}
+.oa-o{border-top:3px solid var(--o)} .oa-o .tag{color:var(--o)} .oa-o .b{background:var(--o)}
+.oa-r{border-top:3px solid var(--r)} .oa-r .tag{color:var(--r)} .oa-r .b{background:var(--r)}
+.oa-s{border-top:3px solid var(--s)} .oa-s .tag{color:var(--s)} .oa-s .b{background:var(--s)}
+.oa-v{border-top:3px solid var(--v)} .oa-v .tag{color:var(--v)} .oa-v .b{background:var(--v)}
+.oa-a{border-top:3px solid var(--a)} .oa-a .tag{color:var(--a)} .oa-a .b{background:var(--a)}
+.oa-i{border-top:3px solid var(--i)} .oa-i .tag{color:var(--i)} .oa-i .b{background:var(--i)}
+
+/* ---------- Buttons ---------- */
+.btn{appearance:none;border:none;font-family:'Sora';font-weight:600;font-size:13.5px;border-radius:var(--radius-sm);padding:11px 20px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover{background:var(--ink-deep)}
+.btn-ghost{background:#fff;color:var(--ink);border:1.5px solid var(--hair)}
+.btn-ghost:hover{border-color:var(--ink)}
+.btn-ok{background:var(--r);color:#fff}.btn-ok:hover{filter:brightness(.93)}
+.btn-danger{background:#fff;color:var(--notstart);border:1.5px solid #FAD4D4}.btn-danger:hover{background:#FEF2F2}
+.btn-sm{padding:7px 12px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row-actions{display:flex;gap:18px;align-items:center;margin-top:8px;flex-wrap:wrap}
+
+/* ---------- Cards / tasks ---------- */
+.deptblock{margin-bottom:26px}
+.deptblock>h3{font-size:15px;color:var(--ink);display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.deptblock>h3 .count{font-family:'JetBrains Mono';font-size:11px;font-weight:700;background:var(--bg);color:var(--muted);border-radius:20px;padding:3px 10px}
+.deptblock>h3 .bar{flex:1;height:1px;background:var(--hair)}
+/* Tab 2 — eye-catching colored department header */
+.dept-head{display:flex;align-items:center;gap:12px;padding:11px 15px;border-radius:11px;background:var(--dcs);border-left:6px solid var(--dc);margin-bottom:13px;transition:.18s;cursor:default;position:relative;overflow:hidden}
+.dept-head::after{content:"";position:absolute;inset:0;background:var(--dc);opacity:0;transition:.18s}
+.dept-head:hover{transform:translateX(3px);box-shadow:0 8px 22px rgba(16,33,64,.13)}
+.dept-head:hover::after{opacity:.06}
+.dept-head .dept-name{font-family:'Sora';font-weight:800;font-size:15.5px;color:var(--dc);letter-spacing:-.01em;position:relative;z-index:1}
+.dept-head:hover .dept-name{letter-spacing:.005em}
+.dept-head .dept-count{margin-left:auto;font-family:'JetBrains Mono';font-size:11px;font-weight:700;color:#fff;background:var(--dc);border-radius:20px;padding:4px 12px;position:relative;z-index:1;white-space:nowrap}
+.dept-sort{display:flex;align-items:center;gap:9px;margin-bottom:16px;flex-wrap:wrap}
+.dept-sort label{font-size:12px;font-weight:600;color:var(--muted)}
+.dept-sort select{width:auto;padding:8px 12px;font-size:12.5px}
+/* Tab 4 — how points are calculated note */
+.pts-note{background:#FBFCFE;border:1px solid var(--hair);border-radius:12px;margin-bottom:18px;font-size:12.5px}
+.pts-note summary{cursor:pointer;padding:12px 15px;font-weight:600;color:var(--ink);font-family:'Sora';list-style:none}
+.pts-note summary::-webkit-details-marker{display:none}
+.pts-note summary::before{content:"ⓘ ";color:var(--o)}
+.pts-note[open] summary{border-bottom:1px solid var(--hair)}
+.pts-note .pts-body{padding:13px 16px;color:var(--text);line-height:1.7}
+.pts-note .pts-body b{color:var(--ink)}
+.pts-note .pts-body .k{font-family:'JetBrains Mono';font-weight:700;font-size:11.5px;background:var(--bg);border-radius:6px;padding:2px 7px}
+.tcard{border:1px solid var(--hair);border-radius:var(--radius);padding:0;overflow:hidden;background:#fff;margin-bottom:12px;box-shadow:var(--shadow)}
+.tcard-top{padding:15px 18px;display:flex;gap:14px;align-items:flex-start;border-bottom:1px solid var(--hair-2)}
+.tcard-top .title{flex:1}
+.tcard-top .title h4{font-size:15px;color:var(--ink);font-weight:700}
+.tcard-top .title p{font-size:12.5px;color:var(--muted);margin-top:3px}
+.meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.chip{font-size:11px;font-weight:600;border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px;background:var(--bg);color:var(--muted)}
+.chip.prio-high{background:#FEF2F2;color:#DC2626}.chip.prio-med{background:#FFFBEB;color:#D97706}.chip.prio-low{background:#F0FDF4;color:#16A34A}
+.status-pill{font-family:'Sora';font-weight:700;font-size:11px;border-radius:20px;padding:4px 12px;color:#fff;white-space:nowrap;text-transform:uppercase;letter-spacing:.03em}
+.st-done{background:var(--done)}.st-prog{background:var(--prog)}.st-delay{background:var(--delay)}.st-notstart{background:var(--notstart)}
+.st-init{background:#A855F7}.st-near{background:#0EA5E9}
+.approved-flag{background:var(--a-soft);color:var(--a);border:1px solid #B8E0DB}
+.matrix-strip{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--hair-2)}
+.ms-cell{padding:9px 11px;border-right:1px solid var(--hair-2);min-height:54px}
+.ms-cell:last-child{border-right:none}
+.ms-cell .lbl{font-family:'Sora';font-weight:800;font-size:10px;letter-spacing:.05em;display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.ms-cell .who{font-size:12px;color:var(--text);font-weight:500;line-height:1.3}
+.ms-cell .who.empty{color:#B6C0CE;font-style:italic;font-weight:400}
+.ms-cell.c-o .lbl{color:var(--o)}.ms-cell.c-r .lbl{color:var(--r)}.ms-cell.c-s .lbl{color:var(--s)}
+.ms-cell.c-v .lbl{color:var(--v)}.ms-cell.c-a .lbl{color:var(--a)}.ms-cell.c-i .lbl{color:var(--i)}
+.tcard-foot{padding:11px 18px;display:flex;align-items:center;gap:10px;justify-content:space-between;background:#FBFCFE;flex-wrap:wrap}
+.tcard-foot .dates{font-size:12px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+.tcard-foot .dates b{color:var(--ink);font-weight:600}
+.foot-actions{display:flex;gap:8px}
+
+/* ---------- Progress ---------- */
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kcard{background:#fff;border:1px solid var(--hair);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+.kcard.k-done::before{background:var(--done)}.kcard.k-prog::before{background:var(--prog)}
+.kcard.k-delay::before{background:var(--delay)}.kcard.k-risk::before{background:var(--notstart)}
+.kcard .num{font-family:'Sora';font-weight:800;font-size:30px;color:var(--ink);line-height:1}
+.kcard .cap{font-size:12px;color:var(--muted);margin-top:6px;font-weight:500}
+.deptprog{border:1px solid var(--hair);border-radius:var(--radius);padding:15px 18px;margin-bottom:12px;background:#fff;box-shadow:var(--shadow)}
+.deptprog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.deptprog-head .name{font-family:'Sora';font-weight:700;font-size:14px;color:var(--ink)}
+.deptprog-head .pct{font-family:'Sora';font-weight:800;font-size:18px}
+.track{height:11px;border-radius:20px;background:var(--hair);overflow:hidden;display:flex}
+.track>span{height:100%}
+.seg-done{background:var(--done)}.seg-prog{background:var(--prog)}.seg-delay{background:var(--delay)}.seg-notstart{background:var(--notstart)}
+.seg-init{background:#A855F7}.seg-near{background:#0EA5E9}
+.track-legend{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.track-legend span{display:flex;align-items:center;gap:6px}
+
+/* risk register */
+.risk-item{display:flex;gap:13px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--hair-2)}
+.risk-item:last-child{border-bottom:none}
+.risk-sev{width:6px;align-self:stretch;border-radius:4px;flex-shrink:0}
+.sev-high{background:var(--notstart)}.sev-med{background:var(--delay)}.sev-low{background:var(--prog)}
+.risk-body{flex:1}
+.risk-body .rt{font-weight:600;font-size:13.5px;color:var(--ink)}
+.risk-body .rd{font-size:12.5px;color:var(--muted);margin-top:3px}
+.risk-tag{font-family:'JetBrains Mono';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:6px;flex-shrink:0}
+.rtag-high{background:#FEF2F2;color:#DC2626}.rtag-med{background:#FFFBEB;color:#D97706}.rtag-low{background:#EFF6FF;color:#2563EB}
+
+/* board view */
+.board-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:18px}
+.chartbox{background:#fff;border:1px solid var(--hair);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.chartbox h3{font-size:14px;color:var(--ink);margin-bottom:4px}
+.chartbox .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.chart-wrap{position:relative;height:260px}
+.score-table{width:100%;border-collapse:collapse;font-size:13px}
+.score-table th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--hair)}
+.score-table td{padding:10px;border-bottom:1px solid var(--hair-2);color:var(--text)}
+.score-table tr:hover td{background:#FBFCFE}
+.score-table .dept-n{font-weight:600;color:var(--ink)}
+.minibar{height:7px;border-radius:20px;background:var(--hair);overflow:hidden;width:90px;display:inline-block;vertical-align:middle}
+.minibar>span{display:block;height:100%;background:var(--o)}
+.verdict{font-family:'JetBrains Mono';font-weight:700;font-size:11px;padding:3px 9px;border-radius:6px}
+.v-strong{background:#F0FDF4;color:#16A34A}.v-watch{background:#FFFBEB;color:#D97706}.v-risk{background:#FEF2F2;color:#DC2626}
+
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty .ico{font-size:34px;margin-bottom:10px;opacity:.4}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(15,27,48,.55);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.scrim.show{display:flex}
+.modal{background:#fff;border-radius:var(--radius);max-width:380px;width:100%;padding:26px;box-shadow:var(--shadow-lg)}
+.modal h3{font-size:17px;color:var(--ink);margin-bottom:6px}
+.modal p{font-size:13px;color:var(--muted);margin-bottom:16px}
+.modal .modal-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+.lock-note{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;background:var(--v-soft);border:1px solid #E0D5F5;color:var(--v);border-radius:var(--radius-sm);padding:10px 13px;margin-bottom:18px}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;font-size:13.5px;font-weight:500;padding:12px 22px;border-radius:30px;box-shadow:var(--shadow-lg);opacity:0;transition:.3s;z-index:60;display:flex;align-items:center;gap:9px}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+footer{background:var(--ink-deep);color:#fff;text-align:center;padding:18px;font-family:'Sora';font-weight:600;font-size:13px;letter-spacing:.02em}
+footer span{color:#7E8FAD;font-weight:500}
+footer a{color:#C2CEE2;text-decoration:none;font-weight:600}
+footer a:hover{color:#fff;text-decoration:underline}
+
+/* ---------- delivery variance (actual vs due) ---------- */
+.var-note{font-size:12px;font-weight:600;margin-top:7px;padding:8px 12px;border-radius:9px;display:none}
+.var-note.show{display:block}
+.var-early{background:#F0FDF4;color:#16A34A;border:1px solid #BBF7D0}
+.var-late{background:#FEF2F2;color:#DC2626;border:1px solid #FAD4D4}
+.var-none{background:var(--bg);color:var(--muted);border:1px solid var(--hair)}
+.delivery{font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;white-space:nowrap;font-family:'JetBrains Mono'}
+.dv-ontime{background:#F0FDF4;color:#16A34A}
+.dv-late{background:#FEF2F2;color:#DC2626}
+.dv-none{background:var(--bg);color:var(--muted)}
+
+/* ---------- guulba wordmark (per-letter colours) ---------- */
+.gmark{font-family:'Sora',sans-serif;font-weight:800;font-style:normal;display:inline-flex;letter-spacing:.01em;line-height:1}
+.gmark i{font-style:normal}
+.gmark i:nth-child(1){color:#F59E0B} /* g amber  */
+.gmark i:nth-child(2){color:#06B6D4} /* u cyan   */
+.gmark i:nth-child(3){color:#22C55E} /* u green  */
+.gmark i:nth-child(4){color:#8B5CF6} /* l purple */
+.gmark i:nth-child(5){color:#F97316} /* b orange */
+.gmark i:nth-child(6){color:#EC4899} /* a rose   */
+.brand-right{display:flex;flex-direction:column;align-items:flex-end;gap:11px}
+.powered{display:flex;align-items:center;gap:8px}
+.powered-by{font-size:10px;color:#9FB0CA;text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+@media(max-width:560px){.brand-right{align-items:flex-start}}
+
+/* ---------- backup / restore toolbar ---------- */
+.data-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#FBFCFE;border:1px solid var(--hair);border-radius:12px;padding:11px 14px;margin-bottom:18px}
+.data-tools .dt-label{font-size:12.5px;font-weight:600;color:var(--ink)}
+.data-tools .dt-hint{font-size:11.5px;color:var(--muted);margin-left:auto}
+
+@media(max-width:980px){
+  .board-grid{grid-template-columns:1fr}
+  .g2,.g3{grid-template-columns:1fr}
+  .kgrid{grid-template-columns:1fr 1fr}
+  .orsvai-assign{grid-template-columns:repeat(2,1fr)}
+  .matrix-strip{grid-template-columns:repeat(3,1fr)}
+  .ms-cell:nth-child(3n){border-right:none}
+  .rail-track{flex-wrap:wrap}.rail-node{flex:1 1 33%}.rail-node::after{display:none}
+}
+@media(max-width:560px){
+  .shell-inner,.rail,.tabs,main{padding-left:14px;padding-right:14px}
+  .kgrid{grid-template-columns:1fr 1fr}
+  .brand .logo{font-size:27px}
+}
+/* ---------- near-deadline emphasis ---------- */
+.tcard{position:relative}
+.tcard[data-urg="overdue"]{border-color:#F4A8A8}
+.tcard[data-urg="urgent"]{border-color:#F8B4B4;box-shadow:0 0 0 1px #F8B4B4,0 10px 30px rgba(239,68,68,.16)}
+.tcard[data-urg="soon"]{border-color:#FBD88A;box-shadow:0 0 0 1px #FBD88A,0 8px 24px rgba(245,158,11,.14)}
+.urg-flag{font-family:'JetBrains Mono';font-weight:700;font-size:10.5px;letter-spacing:.04em;border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px}
+.urg-overdue{background:#FEF2F2;color:#DC2626}.urg-urgent{background:#FEF2F2;color:#DC2626}
+.urg-soon{background:#FFFBEB;color:#D97706}
+@keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.55}}
+.urg-flag .pd{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulseDot 1.5s ease-in-out infinite}
+.due-tip{position:absolute;top:10px;right:12px;width:240px;background:var(--ink-deep);color:#fff;border-radius:12px;padding:13px 15px;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(-4px);pointer-events:none;transition:.18s;z-index:8}
+.tcard[data-urg]:not([data-urg="normal"]):hover .due-tip{opacity:1;transform:none}
+.due-tip .cd{font-family:'Sora';font-weight:800;font-size:22px;line-height:1}
+.due-tip .cd small{font-size:12px;font-weight:600;color:#9FB0CA}
+.due-tip .nx{font-size:11.5px;color:#C2CEE2;margin-top:8px;line-height:1.4}
+.due-tip .nx b{color:#fff}
+
+/* focus strip */
+.focus-wrap{margin-bottom:22px}
+.focus-wrap h3{font-size:13px;color:var(--ink);font-family:'Sora';display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.focus-strip{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:thin}
+.focus-card{min-width:236px;flex-shrink:0;border:1px solid var(--hair);border-left:4px solid var(--delay);border-radius:12px;padding:13px 15px;background:#fff;box-shadow:var(--shadow)}
+.focus-card.fc-urgent{border-left-color:var(--notstart)}.focus-card.fc-overdue{border-left-color:var(--notstart);background:#FFFBFB}
+.focus-card .fc-cd{font-family:'Sora';font-weight:800;font-size:17px;color:var(--ink)}
+.focus-card .fc-cd.late{color:var(--notstart)}
+.focus-card .fc-t{font-size:13px;font-weight:600;color:var(--ink);margin:5px 0 2px;line-height:1.3}
+.focus-card .fc-d{font-size:11.5px;color:var(--muted)}
+.focus-card .fc-o{font-size:11.5px;color:var(--o);margin-top:7px;font-weight:600}
+
+/* period toggle + trend */
+.seg-toggle{display:inline-flex;background:var(--bg);border-radius:11px;padding:3px;gap:2px}
+.seg-toggle button{appearance:none;border:none;background:none;font-family:'Sora';font-weight:600;font-size:12.5px;color:var(--muted);padding:7px 15px;border-radius:8px;cursor:pointer;transition:.14s}
+.seg-toggle button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+.period-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.delta-chip{font-family:'Sora';font-weight:700;font-size:12.5px;border-radius:20px;padding:5px 13px;display:inline-flex;align-items:center;gap:6px}
+.delta-up{background:#F0FDF4;color:#16A34A}.delta-down{background:#FEF2F2;color:#DC2626}.delta-flat{background:var(--bg);color:var(--muted)}
+
+/* feedback loop */
+.needs-update{background:var(--s-soft);color:var(--s);border:1px solid #F6C9A8}
+.fb-note{background:#FFF8F2;border:1px solid #F6D9BE;border-radius:10px;padding:9px 12px;font-size:12px;color:#9A4A12;margin:0 18px 12px}
+.fb-note b{color:var(--s)}
+.update-banner{background:linear-gradient(120deg,var(--s-soft),#fff);border:1px solid #F6C9A8;border-radius:var(--radius);padding:15px 18px;margin-bottom:22px}
+.update-banner h4{font-size:13.5px;color:var(--s);font-family:'Sora';display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.uq-item{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid var(--hair);border-radius:10px;padding:9px 13px;margin-bottom:8px}
+.uq-item:last-child{margin-bottom:0}
+.uq-item .uq-t{flex:1;font-size:13px;font-weight:600;color:var(--ink)}
+.uq-item .uq-fb{font-size:11.5px;color:var(--muted);font-weight:400}
+.edit-mode-bar{display:none;background:var(--o-soft);border:1px solid #BFD4FB;border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:12.5px;color:var(--o);align-items:center;gap:10px}
+.edit-mode-bar.show{display:flex}
+
+/* engagement */
+.eng-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.eng-card{background:linear-gradient(135deg,var(--ink),var(--ink-deep));color:#fff;border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+.eng-card .num{font-family:'Sora';font-weight:800;font-size:28px;line-height:1}
+.eng-card .cap{font-size:11.5px;color:#A9B6CC;margin-top:6px}
+.eng-card .ico{position:absolute;right:14px;top:13px;font-size:20px;opacity:.5}
+.lb-row{display:flex;align-items:center;gap:13px;padding:11px 0;border-bottom:1px solid var(--hair-2)}
+.lb-row:last-child{border-bottom:none}
+.lb-rank{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-family:'Sora';font-weight:800;font-size:13px;background:var(--bg);color:var(--muted);flex-shrink:0}
+.lb-rank.gold{background:#FEF3C7;color:#B45309}.lb-rank.silver{background:#F1F5F9;color:#475569}.lb-rank.bronze{background:#FCE9DC;color:#B45309}
+.lb-name{flex:1;font-weight:600;font-size:13.5px;color:var(--ink)}
+.lb-name small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.lb-pts{font-family:'JetBrains Mono';font-weight:700;font-size:14px;color:var(--ink)}
+.lb-pts small{font-size:10px;color:var(--muted);font-weight:500}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.badge{font-size:11px;font-weight:600;border-radius:20px;padding:4px 11px;display:inline-flex;align-items:center;gap:5px;background:var(--bg);color:var(--muted)}
+.badge.earned{background:var(--a-soft);color:var(--a)}
+
+/* confetti */
+.confetti-pc{position:fixed;width:9px;height:14px;top:-20px;z-index:90;pointer-events:none;border-radius:2px}
+
+/* ---------- site sign-in gate ---------- */
+.gate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,var(--ink-deep),var(--ink) 55%,#1d3a63);display:grid;place-items:center;padding:24px;transition:opacity .35s ease}
+.gate.hide{opacity:0;pointer-events:none}
+.gate-card{width:100%;max-width:380px;background:var(--panel);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.4);padding:34px 32px;text-align:center}
+.gate-rail{display:flex;justify-content:center;gap:7px;margin-bottom:20px}
+.gate-rail span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:'Sora';font-weight:800;font-size:14px}
+.gate-brand{font-family:'Sora';font-weight:800;font-size:32px;letter-spacing:.01em;color:var(--ink);line-height:1}
+.gate-sub{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-top:6px}
+.gate-msg{font-size:13.5px;color:var(--text);margin:20px 0 16px}
+.gate-card .field input{text-align:center;font-size:15px;padding:12px}
+.gate-err{font-size:12.5px;color:var(--notstart);font-weight:600;min-height:18px;margin-top:10px}
+.gate-foot{font-size:11px;color:var(--muted);margin-top:18px}
+
+@media(max-width:980px){.eng-grid{grid-template-columns:1fr 1fr}}
+
+</style>
+</head>
+<body>
+
+<!-- ============ SIGN-IN GATE ============ -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-rail">
+      <span style="background:var(--o)">O</span><span style="background:var(--r)">R</span><span style="background:var(--s)">S</span><span style="background:var(--v)">V</span><span style="background:var(--a)">A</span><span style="background:var(--i)">I</span>
+    </div>
+    <div class="gate-brand">ORSVAI</div>
+    <div class="gate-sub">Accountability Board</div>
+    <p class="gate-msg">Sign in to access the project development board.</p>
+    <div class="field"><input type="password" id="gatePw" placeholder="Access password" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" /></div>
+    <button class="btn btn-primary" id="gateBtn" style="width:100%;justify-content:center;margin-top:10px">Sign in</button>
+    <div class="gate-err" id="gateErr"></div>
+    <div style="margin-top:16px"><span class="gmark" style="font-size:24px"><i>g</i><i>u</i><i>u</i><i>l</i><i>b</i><i>a</i></span></div>
+    <div class="gate-foot">technology for better performance</div>
+  </div>
+</div>
+
+<!-- ============ SHELL ============ -->
+<header class="shell">
+  <div class="shell-inner">
+    <div class="brand-row">
+      <div class="brand">
+        <div class="logo"><span>ORSVAI</span></div>
+        <div class="brand-sub"><b>Excellence Accountability Framework</b><br>Right Person · Right Role · Right Time · Right Result</div>
+      </div>
+      <div class="brand-right">
+        <div class="powered"><span class="powered-by">powered by</span> <span class="gmark" style="font-size:21px"><i>g</i><i>u</i><i>u</i><i>l</i><i>b</i><i>a</i></span></div>
+        <div class="kpibar" id="shellKpis"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ ORSVAI RAIL (signature) ============ -->
+<div class="rail">
+  <div class="rail-track">
+    <div class="rail-node r-o"><div class="rail-badge">O</div><div class="rail-name">Owner</div><div class="rail-role">Sets direction & is ultimately responsible</div></div>
+    <div class="rail-node r-r"><div class="rail-badge">R</div><div class="rail-name">Responsible</div><div class="rail-role">Executes the task & delivers output</div></div>
+    <div class="rail-node r-s"><div class="rail-badge">S</div><div class="rail-name">Support</div><div class="rail-role">Provides tools, manpower & budget</div></div>
+    <div class="rail-node r-v"><div class="rail-badge">V</div><div class="rail-name">Verify</div><div class="rail-role">Audits, checks & confirms accuracy</div></div>
+    <div class="rail-node r-a"><div class="rail-badge">A</div><div class="rail-name">Approve</div><div class="rail-role">Reviews, decides & gives sign-off</div></div>
+    <div class="rail-node r-i"><div class="rail-badge">I</div><div class="rail-name">Inform</div><div class="rail-role">Receives updates & is kept informed</div></div>
+  </div>
+</div>
+
+<!-- ============ TABS ============ -->
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-view="entry"><span class="n">1</span> Task Entry</button>
+  <button class="tab" data-view="manage"><span class="n">2</span> Department Tasks</button>
+  <button class="tab" data-view="progress"><span class="n">3</span> Progress &amp; Risk</button>
+  <button class="tab" data-view="board"><span class="n">4</span> Board View</button>
+  <button class="tab" data-view="archive"><span class="n">5</span> Completed</button>
+</nav>
+
+<main>
+
+  <!-- ===== VIEW 1: TASK ENTRY ===== -->
+  <section class="view active" id="view-entry">
+    <div class="panel">
+      <div class="view-head">
+        <div class="eyebrow">Step 1 — Capture</div>
+        <h2>Project Development Task Entry</h2>
+        <p>Log a development task for a department and assign accountability across the six ORSVAI roles. No task is saved without an Owner — that is the first principle of the framework.</p>
+      </div>
+
+      <div class="data-tools">
+        <span class="dt-label">🔒 Data safety <span style="font-weight:400;color:var(--muted)">(Owner only)</span>:</span>
+        <button class="btn btn-ghost btn-sm" id="exportData">⬇ Export backup</button>
+        <button class="btn btn-ghost btn-sm" id="importData">⬆ Restore backup</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden />
+        <span class="dt-hint">Owner key required — Export saves a copy, Restore replaces all tasks.</span>
+      </div>
+
+      <div class="update-banner" id="updateQueue" style="display:none">
+        <h4>↩ Sent back for update <span class="hint" style="font-weight:400;color:var(--muted)">— management requested changes</span></h4>
+        <div id="updateQueueList"></div>
+      </div>
+
+      <div class="edit-mode-bar" id="editBar">
+        <span>✎ Updating an existing task — make your changes and save.</span>
+        <button class="btn btn-ghost btn-sm" id="exitEdit" style="margin-left:auto;padding:5px 11px">Cancel update</button>
+      </div>
+
+      <div class="grid g2">
+        <div class="field">
+          <label>Department <span class="dot" style="background:var(--o)"></span></label>
+          <select id="f-dept"></select>
+        </div>
+        <div class="field">
+          <label>Priority</label>
+          <select id="f-prio"><option value="High">High</option><option value="Medium" selected>Medium</option><option value="Low">Low</option></select>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:16px">
+        <label>Development task / issue</label>
+        <input id="f-title" placeholder="e.g. Implement digital line-balancing dashboard for Sewing floor" />
+      </div>
+
+      <div class="field" style="margin-top:16px">
+        <label>Description / scope <span class="hint">— what is being developed and why</span></label>
+        <textarea id="f-desc" placeholder="Describe the development objective, deliverable, and target outcome…"></textarea>
+      </div>
+
+      <div class="field" style="margin-top:18px">
+        <label>ORSVAI accountability assignment</label>
+        <div class="orsvai-assign">
+          <div class="oa-cell oa-o"><div class="tag"><span class="b">O</span> Owner</div><input id="f-O" placeholder="Owner" /></div>
+          <div class="oa-cell oa-r"><div class="tag"><span class="b">R</span> Responsible</div><input id="f-R" placeholder="Responsible" /></div>
+          <div class="oa-cell oa-s"><div class="tag"><span class="b">S</span> Support</div><input id="f-S" placeholder="Support" /></div>
+          <div class="oa-cell oa-v"><div class="tag"><span class="b">V</span> Verify</div><input id="f-V" placeholder="Verify" /></div>
+          <div class="oa-cell oa-a"><div class="tag"><span class="b">A</span> Approve</div><input id="f-A" placeholder="Approve" /></div>
+          <div class="oa-cell oa-i"><div class="tag"><span class="b">I</span> Inform</div><input id="f-I" placeholder="Inform" /></div>
+        </div>
+      </div>
+
+      <div class="grid g3" style="margin-top:18px">
+        <div class="field">
+          <label>Start date</label>
+          <input type="date" id="f-start" />
+        </div>
+        <div class="field">
+          <label>Due date</label>
+          <input type="date" id="f-due" />
+        </div>
+        <div class="field">
+          <label>Duration <span class="hint">— auto</span></label>
+          <input id="f-dur" readonly placeholder="— days" />
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:16px">
+        <label>Initial status</label>
+        <select id="f-status">
+          <option value="Not Started" selected>Not Started — 0%</option>
+          <option value="Initiated">Initiated — 25%</option>
+          <option value="In Progress">In Progress — 50%</option>
+          <option value="Near Completion">Near Completion — 75%</option>
+          <option value="Delayed">Delayed — 40%</option>
+          <option value="Completed">Completed — 100%</option>
+        </select>
+      </div>
+
+      <div class="field" id="completedWrap" style="margin-top:16px;display:none">
+        <label>Actual completion date <span class="hint">— when the task was really finished</span></label>
+        <input type="date" id="f-actual" />
+        <div id="varianceNote" class="var-note"></div>
+      </div>
+
+      <div class="row-actions">
+        <button class="btn btn-primary" id="addTask">Add development task</button>
+        <button class="btn btn-ghost btn-sm" id="clearForm">Clear form</button>
+        <span class="hint" style="font-size:12px;color:var(--muted)">Submitted tasks await management approval in <b>Tab 2</b>.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VIEW 2: DEPARTMENT TASKS / MANAGEMENT ===== -->
+  <section class="view" id="view-manage">
+    <div class="panel">
+      <div class="view-head">
+        <div class="eyebrow" style="color:var(--a)">Step 2 — Govern</div>
+        <h2>Department-wise Development Tasks</h2>
+        <p>Management review queue grouped by department, showing only open work. Approve a task to lock its accountability, update its delivery status, send it back for changes, or remove it. Once a task is completed it moves to the <b>Completed</b> tab.</p>
+      </div>
+      <div class="lock-note" id="manageLock">🔒 Management actions (Approve / Remove) are locked. <a href="#" id="unlockBtn" style="color:var(--v);font-weight:700;margin-left:4px">Unlock with key</a></div>
+      <div class="dept-sort">
+        <label for="deptSort">Sort departments:</label>
+        <select id="deptSort">
+          <option value="az">Name — A to Z</option>
+          <option value="za">Name — Z to A</option>
+          <option value="count">Most tasks first</option>
+        </select>
+      </div>
+      <div id="manageList"></div>
+    </div>
+  </section>
+
+  <!-- ===== VIEW 3: PROGRESS & RISK ===== -->
+  <section class="view" id="view-progress">
+    <div class="panel">
+      <div class="view-head">
+        <div class="eyebrow" style="color:var(--v)">Step 3 — Measure</div>
+        <h2>Project Progress &amp; Risk Analysis</h2>
+        <p>Department progress is scored on the ORSVAI stage scale — Not Started 0%, Initiated 25%, In Progress 50%, Near Completion 75%, Completed 100% (Delayed 40%) — and verification determines the actual score. The risk register flags what has not happened on time.</p>
+      </div>
+      <div class="kgrid" id="progKpis"></div>
+
+      <div class="focus-wrap" id="focusWrap">
+        <h3>⚡ Focus now <span class="hint" style="font-weight:400;color:var(--muted)">— tasks closest to their deadline</span></h3>
+        <div class="focus-strip" id="focusStrip"></div>
+      </div>
+
+      <div class="chartbox" style="margin-bottom:22px">
+        <div class="period-head">
+          <div>
+            <h3>Progress trend</h3>
+            <div class="sub">Portfolio completion over time — verified ORSVAI score</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span id="periodDelta"></span>
+            <div class="seg-toggle" id="periodToggle">
+              <button data-p="weekly" class="on">Weekly</button>
+              <button data-p="monthly">Monthly</button>
+              <button data-p="quarterly">Quarterly</button>
+              <button data-p="yearly">Yearly</button>
+            </div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="trendChart"></canvas></div>
+      </div>
+
+      <div class="grid g2" style="align-items:start;gap:22px">
+        <div>
+          <h3 style="font-size:14px;color:var(--ink);margin-bottom:14px;font-family:'Sora'">Department progress</h3>
+          <div id="deptProgress"></div>
+        </div>
+        <div>
+          <h3 style="font-size:14px;color:var(--ink);margin-bottom:14px;font-family:'Sora'">Risk register <span style="font-size:11px;color:var(--muted);font-weight:400">— what hasn't happened</span></h3>
+          <div class="chartbox" style="padding:6px 18px"><div id="riskList"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VIEW 4: BOARD VIEW ===== -->
+  <section class="view" id="view-board">
+    <div class="panel">
+      <div class="view-head">
+        <div class="eyebrow" style="color:var(--i)">Step 4 — Decide</div>
+        <h2>Birds-eye Board View</h2>
+        <p>One framework, one accountability. A single executive overview of project development across all departments for the management board meeting.</p>
+      </div>
+      <div class="kgrid" id="boardKpis"></div>
+
+      <div class="eng-grid" id="engKpis"></div>
+
+      <details class="pts-note">
+        <summary>How accountability points are calculated</summary>
+        <div class="pts-body">
+          Each task earns points for its <b>outcome</b>, adjusted for <b>difficulty</b> and <b>timeliness</b> — the same points credit the task's Department, its Owner (O) and its Responsible (R).
+          <br><br>
+          <b>Outcome:</b> Completed <span class="k">+30</span> · Near Completion <span class="k">+15</span> · In Progress <span class="k">+8</span> · Initiated <span class="k">+4</span> · Not Started <span class="k">0</span> · Delayed <span class="k">−10</span><br>
+          <b>Difficulty (× priority):</b> High <span class="k">×1.5</span> · Medium <span class="k">×1.0</span> · Low <span class="k">×0.75</span><br>
+          <b>Verification:</b> a completed task counts <span class="k">60%</span> until management approves it<br>
+          <b>Timeliness:</b> delivered on time <span class="k">+15</span> · delivered late <span class="k">−5</span> (when a due date is set)<br>
+          <b>Overdue &amp; still open:</b> <span class="k">−8</span> &nbsp;·&nbsp; scores never display below <span class="k">0</span>
+          <br><br>
+          <i>Example — a high-priority task, completed, verified and on time: 30 × 1.5 + 15 = <b>60 pts</b>.</i>
+        </div>
+      </details>
+
+      <div class="board-grid" style="margin-bottom:18px">
+        <div class="chartbox">
+          <h3>Development completion by department</h3>
+          <div class="sub">ORSVAI verified score, weighted by task count</div>
+          <div class="chart-wrap"><canvas id="deptChart"></canvas></div>
+        </div>
+        <div class="chartbox">
+          <h3>🏆 Department leaderboard</h3>
+          <div class="sub">Accountability points — completion, approvals & on-time delivery</div>
+          <div id="leaderboard"></div>
+        </div>
+      </div>
+
+      <div class="board-grid" style="margin-bottom:18px">
+        <div class="chartbox">
+          <h3>👤 Owner leaderboard</h3>
+          <div class="sub">Individual performance as task <b>Owner</b> — who is accountable and delivering</div>
+          <div id="ownerLeaderboard"></div>
+        </div>
+        <div class="chartbox">
+          <h3>🛠 Responsible leaderboard</h3>
+          <div class="sub">Individual performance as <b>Responsible</b> — who is executing and delivering</div>
+          <div id="respLeaderboard"></div>
+        </div>
+      </div>
+      <div class="board-grid" style="margin-bottom:18px">
+        <div class="chartbox">
+          <h3>Portfolio status mix</h3>
+          <div class="sub">All active development tasks, all departments</div>
+          <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+        </div>
+        <div class="chartbox">
+          <h3>Milestone badges</h3>
+          <div class="sub">Engagement milestones unlocked across the portfolio</div>
+          <div class="badges" id="badgeRow" style="margin-top:14px"></div>
+        </div>
+      </div>
+      <div class="chartbox">
+        <h3>Board scorecard</h3>
+        <div class="sub">Department accountability, progress and verdict at a glance</div>
+        <table class="score-table" id="scoreTable"></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VIEW 5: ARCHIVE ===== -->
+  <section class="view" id="view-archive">
+    <div class="panel">
+      <div class="view-head">
+        <div class="eyebrow" style="color:var(--muted)">Records — Delivered</div>
+        <h2>Completed Projects</h2>
+        <p>Completed development tasks move here, newest first. They wait for management verification, sit in the recent list once signed off, and auto-archive one year after completion — keeping the active board clean while preserving the full ORSVAI record.</p>
+      </div>
+      <div class="lock-note" id="archiveLock">🔒 Verification &amp; archive actions are locked. <a href="#" id="unlockBtn2" style="color:var(--v);font-weight:700;margin-left:4px">Unlock with key</a></div>
+      <div class="kgrid" id="archiveKpis"></div>
+      <div id="archiveList"></div>
+    </div>
+  </section>
+</main>
+
+<footer><span class="gmark" style="font-size:15px"><i>g</i><i>u</i><i>u</i><i>l</i><i>b</i><i>a</i></span> &nbsp;(<a href="https://www.guulba.com" target="_blank" rel="noopener">www.guulba.com</a>)&nbsp; — <span>technology for better performance</span></footer>
+
+<!-- ===== Unlock modal ===== -->
+<div class="scrim" id="scrim">
+  <div class="modal">
+    <h3>Management access</h3>
+    <p>Enter the management key to approve or remove department tasks.</p>
+    <div class="field"><input type="password" id="pwInput" placeholder="Management key" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="pwCancel">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="pwSubmit">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Owner access modal (tier 3 — backup / restore) ===== -->
+<div class="scrim" id="ownerScrim">
+  <div class="modal">
+    <h3>Owner access</h3>
+    <p>Backup and restore are Owner-only. Enter the Owner key to continue.</p>
+    <div class="field"><input type="password" id="ownerPw" placeholder="Owner key" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="ownerCancel">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="ownerSubmit">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   ORSVAI Project Development Accountability Board
+   Stack: GitHub Pages (HTML/CSS/JS + Chart.js)
+          + Google Apps Script / Sheets backend
+          + Python analytics via GitHub Actions
+   ============================================================ */
+
+const CONFIG = {
+  /* Paste your Apps Script Web App URL here to enable live sync.
+     Leave empty ("") to run standalone on this device. */
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbw7eNEXUAfkVUQdvVQbHzKs1DO8Xe23kIQYtwWletEwaSk2nMHxYMTcrZdO5L9UWFI1/exec",
+
+  /* ---- ACCESS PASSWORDS ----
+     Change these two lines to set your own passwords. They work directly and
+     reliably in every browser (this is what actually lets people in).        */
+  SITE_PASS: "orsvai2026",     // tier 1 — enter the site & view every tab
+  MGMT_PASS: "orsvai-board",   // tier 2 — approve / edit / verify / remove
+  OWNER_PASS: "orsvai-owner",  // tier 3 — Export / Restore backup (Owner only)
+
+  /* Optional hashed equivalents (kept for compatibility; the plain passwords
+     above are the primary check). */
+  SITE_HASH: "3b370bf39e9e54e2c5f1ef5b533908b72ccc3b1846ea9768fd80b9fbd5fb2f31",
+  MGMT_HASH: "22ace2598449d48a1400377ee95cc862800261ced4fb5d5246e1ea66a59d24d0",
+  OWNER_HASH: "19b3fa588e1379539d733eb010a418b0c4ce1f276d8ed4a12c2f9832b6965f9b"
+};
+
+/* ============================================================
+   DEPARTMENTS  —  edit this list freely.
+   ✅ Put ONE department per line. No quotes, no commas needed.
+   ✅ To add: type a new line.   To remove: delete the line.
+   ⚠️ Only rule: keep the two backtick marks  `  at the start and end.
+   ============================================================ */
+const DEPARTMENTS = `
+Raw Materials Warehouse
+Finished Goods Warehouse
+`.split("\n").map(s => s.trim()).filter(Boolean);
+
+const STATUS = {
+  "Not Started":    {score:0,  cls:"st-notstart",seg:"seg-notstart",color:"#EF4444"},
+  "Initiated":      {score:25, cls:"st-init",    seg:"seg-init",    color:"#A855F7"},
+  "In Progress":    {score:50, cls:"st-prog",    seg:"seg-prog",    color:"#2563EB"},
+  "Near Completion":{score:75, cls:"st-near",    seg:"seg-near",    color:"#0EA5E9"},
+  "Delayed":        {score:40, cls:"st-delay",   seg:"seg-delay",   color:"#F59E0B"},
+  "Completed":      {score:100,cls:"st-done",    seg:"seg-done",    color:"#16A34A"}
+};
+const UNDERWAY = ["Initiated","In Progress","Near Completion"];   // active middle stages
+const STATUS_ORDER = ["Completed","Near Completion","In Progress","Initiated","Delayed","Not Started"];
+const ROLES = [["O","Owner"],["R","Responsible"],["S","Support"],["V","Verify"],["A","Approve"],["I","Inform"]];
+
+/* ---------- crypto ----------
+   Uses the browser's native SubtleCrypto on HTTPS/localhost, and falls back to
+   a built-in SHA-256 when crypto.subtle is unavailable (e.g. opening the file
+   directly via file:// or over plain HTTP). Both paths return identical hashes. */
+function sha256js(str){
+  var ascii = unescape(encodeURIComponent(str));   // UTF-8 bytes as a binary string
+  function rr(n,x){return (x>>>n)|(x<<(32-n));}
+  var hash=[], ks=[], primeCounter=0, isComposite={}, i,j,result='';
+  for(var candidate=2; primeCounter<64; candidate++){
+    if(!isComposite[candidate]){
+      for(i=0;i<313;i+=candidate) isComposite[i]=candidate;
+      hash[primeCounter]=(Math.pow(candidate,.5)*4294967296)|0;
+      ks[primeCounter++]=(Math.pow(candidate,1/3)*4294967296)|0;
+    }
+  }
+  var words=[], asciiBitLength=ascii.length*8;
+  ascii+='\x80';
+  while(ascii.length%64-56) ascii+='\x00';
+  for(i=0;i<ascii.length;i++){ j=ascii.charCodeAt(i); words[i>>2]|=j<<((3-i)%4)*8; }
+  words[words.length]=((asciiBitLength/4294967296)|0);
+  words[words.length]=(asciiBitLength);
+  for(j=0;j<words.length;){
+    var w=words.slice(j,j+=16), oldHash=hash; hash=hash.slice(0,8);
+    for(i=0;i<64;i++){
+      var w15=w[i-15], w2=w[i-2], a=hash[0], e=hash[4];
+      var t1=hash[7]+(rr(6,e)^rr(11,e)^rr(25,e))+((e&hash[5])^(~e&hash[6]))+ks[i]
+        +(w[i]=(i<16)?w[i]:(w[i-16]+(rr(7,w15)^rr(18,w15)^(w15>>>3))+w[i-7]
+          +(rr(17,w2)^rr(19,w2)^(w2>>>10)))|0);
+      var t2=(rr(2,a)^rr(13,a)^rr(22,a))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash=[(t1+t2)|0].concat(hash); hash[4]=(hash[4]+t1)|0;
+    }
+    for(i=0;i<8;i++) hash[i]=(hash[i]+oldHash[i])|0;
+  }
+  for(i=0;i<8;i++) for(j=3;j+1;j--){ var b=(hash[i]>>(j*8))&255; result+=((b<16)?0:'')+b.toString(16); }
+  return result;
+}
+async function sha256(str){
+  try{
+    if(typeof crypto!=="undefined" && crypto.subtle){
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+      return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+    }
+  }catch(e){ /* fall through to JS implementation */ }
+  return sha256js(str);
+}
+
+/* ---------- storage layer (Apps Script → localStorage → memory) ---------- */
+let MEM = null;                 // in-memory fallback store
+const LS_KEY   = "orsvai_tasks_v2";
+const LS_BACKUP= "orsvai_tasks_backup";          // rolling safety copy, written on every save
+const OLD_KEYS = ["orsvai_tasks_v1"];            // recover from any earlier store — never delete it
+function lsGet(){ try{ const r=localStorage.getItem(LS_KEY); return r?JSON.parse(r):null; }catch(e){ return undefined; } }
+function lsSet(v){
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify(v));
+    // keep a timestamped backup so an accidental wipe never loses everything
+    if(Array.isArray(v) && v.length) localStorage.setItem(LS_BACKUP, JSON.stringify({at:Date.now(),tasks:v}));
+    return true;
+  }catch(e){ return false; }
+}
+function recoverTasks(){
+  // called only when the main store is empty — pull data back from backup or an older key
+  try{ const b=JSON.parse(localStorage.getItem(LS_BACKUP)||"null"); if(b&&Array.isArray(b.tasks)&&b.tasks.length) return b.tasks; }catch(e){}
+  for(const k of OLD_KEYS){ try{ const r=JSON.parse(localStorage.getItem(k)||"null"); if(Array.isArray(r)&&r.length) return r; }catch(e){} }
+  return null;
+}
+
+const Store = {
+  async load(){
+    if(CONFIG.SCRIPT_URL){
+      try{
+        const r = await fetch(CONFIG.SCRIPT_URL + "?action=list");
+        const j = await r.json();
+        if(j && Array.isArray(j.tasks)) return j.tasks;
+      }catch(e){ toast("Live sync unavailable — using local data"); }
+    }
+    const ls = lsGet();
+    if(ls && ls.length) return ls;
+    const recovered = recoverTasks();      // restore from backup / older store if present
+    if(recovered){ persistLocal(recovered); toast("Recovered your saved tasks"); return recovered; }
+    if(MEM) return MEM;
+    MEM = seed();                          // genuinely first run → empty (trial)
+    persistLocal(MEM);
+    return MEM;
+  },
+  async save(task){         // create
+    if(CONFIG.SCRIPT_URL){
+      try{ await fetch(CONFIG.SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"add",task})}); }catch(e){}
+    }
+  },
+  async update(id, patch){
+    if(CONFIG.SCRIPT_URL){
+      try{ await fetch(CONFIG.SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"update",id,patch})}); }catch(e){}
+    }
+  },
+  async remove(id){
+    if(CONFIG.SCRIPT_URL){
+      try{ await fetch(CONFIG.SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"remove",id})}); }catch(e){}
+    }
+  }
+};
+function persistLocal(arr){ MEM = arr; if(!lsSet(arr)) MEM = arr; }
+
+/* ---------- app state ---------- */
+let TASKS = [];
+let mgmtUnlocked = false;
+
+function uid(){ return "T-"+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+function daysBetween(a,b){ if(!a||!b) return null; const d=(new Date(b)-new Date(a))/86400000; return Math.round(d); }
+function fmt(d){ if(!d) return "—"; return new Date(d).toLocaleDateString(undefined,{day:"2-digit",month:"short",year:"numeric"}); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+/* ---------- seed (sample board data) ---------- */
+function addDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function seed(){
+  // Trial deployment — start empty. Tasks are created live in Tab 1.
+  return [];
+}
+
+/* ============================================================
+   SCORING & RISK ENGINE
+   ============================================================ */
+function taskScore(t){
+  const st = STATUS[t.status] || STATUS["Not Started"];
+  let base = st.score;
+  if(!t.approved && base>0) base = Math.round(base*0.85);   // unverified discount
+  return base;
+}
+function deptStats(){
+  const map = {};
+  const blank=()=>{ const c={}; Object.keys(STATUS).forEach(s=>c[s]=0); return c; };
+  DEPARTMENTS.forEach(d=>map[d]={dept:d,count:0,sum:0,counts:blank()});
+  active().forEach(t=>{
+    if(!map[t.dept]) map[t.dept]={dept:t.dept,count:0,sum:0,counts:blank()};
+    const m=map[t.dept]; m.count++; m.sum+=taskScore(t);
+    m.counts[t.status] = (m.counts[t.status]||0)+1;
+  });
+  return Object.values(map).filter(m=>m.count>0).map(m=>({...m, pct:Math.round(m.sum/m.count)}));
+}
+function overdue(t){ return t.due && t.status!=="Completed" && new Date(t.due) < new Date(todayISO()); }
+
+function riskRegister(){
+  const risks = [];
+  active().forEach(t=>{
+    if(overdue(t)) risks.push({sev:"high",tag:"Overdue",title:`${t.title} — ${t.dept}`,
+      desc:`Due ${fmt(t.due)} and still ${t.status}. Owner ${t.O||"unassigned"} is accountable for recovery.`});
+    if(t.status==="Delayed") risks.push({sev:"high",tag:"Delayed",title:`${t.title} — ${t.dept}`,
+      desc:`Flagged as delayed (50% score). Verify (${t.V||"unassigned"}) to confirm cause and revised date.`});
+    if(!t.O) risks.push({sev:"high",tag:"No Owner",title:`${t.title} — ${t.dept}`,
+      desc:"Violates the first principle: no task without an Owner. Assign accountability before proceeding."});
+    if(t.status==="Completed" && !t.approved) risks.push({sev:"med",tag:"Unverified",title:`${t.title} — ${t.dept}`,
+      desc:`Reported complete but not approved. Verification determines the actual score — Approve (${t.A||"unassigned"}) must sign off.`});
+    if(t.status==="Not Started" && t.start && new Date(t.start) < new Date(todayISO()) && t.approved) risks.push({sev:"med",tag:"Not Started",title:`${t.title} — ${t.dept}`,
+      desc:`Approved and past its start date (${fmt(t.start)}) with no progress. Responsible (${t.R||"unassigned"}) to begin.`});
+  });
+  const order={high:0,med:1,low:2};
+  return risks.sort((a,b)=>order[a.sev]-order[b.sev]);
+}
+
+/* ============================================================
+   PERIODIC PROGRESS · URGENCY · ENGAGEMENT · ARCHIVE
+   ============================================================ */
+function active(){ return TASKS.filter(t=>!t.archived); }
+
+/* --- snapshot store (weekly/monthly/quarterly/yearly trend) --- */
+const SNAP_KEY="orsvai_snaps_v2";
+let SNAPS=null;
+function loadSnaps(){
+  if(SNAPS) return SNAPS;
+  try{ const r=localStorage.getItem(SNAP_KEY); if(r){ SNAPS=JSON.parse(r); return SNAPS; } }catch(e){}
+  SNAPS=seedSnaps(); saveSnaps(); return SNAPS;
+}
+function saveSnaps(){ try{ localStorage.setItem(SNAP_KEY,JSON.stringify(SNAPS)); }catch(e){} }
+function seedSnaps(){
+  // Trial deployment — no synthetic history. The trend builds from real
+  // daily snapshots once tasks exist (see recordSnapshot).
+  return {};
+}
+function recordSnapshot(){
+  const act=active(); if(!act.length) return;
+  const pct=Math.round(act.reduce((s,t)=>s+taskScore(t),0)/act.length);
+  loadSnaps()[todayISO()]=pct; saveSnaps();
+}
+function periodKey(dateStr,gran){
+  const d=new Date(dateStr);
+  const y=d.getFullYear();
+  if(gran==="yearly") return ""+y;
+  if(gran==="quarterly") return y+" Q"+(Math.floor(d.getMonth()/3)+1);
+  if(gran==="monthly") return d.toLocaleString(undefined,{month:"short"})+" "+String(y).slice(2);
+  // weekly → ISO-ish week label
+  const onejan=new Date(y,0,1); const wk=Math.ceil(((d-onejan)/86400000 + onejan.getDay()+1)/7);
+  return "W"+wk+" '"+String(y).slice(2);
+}
+function periodSeries(gran){
+  const snaps=loadSnaps();
+  const buckets={};
+  Object.keys(snaps).sort().forEach(date=>{
+    buckets[periodKey(date,gran)]=snaps[date];  // last value in the period wins
+  });
+  let entries=Object.entries(buckets);
+  const cap={weekly:12,monthly:12,quarterly:8,yearly:5}[gran]||12;
+  entries=entries.slice(-cap);
+  return {labels:entries.map(e=>e[0]), values:entries.map(e=>e[1])};
+}
+
+/* --- near-deadline urgency --- */
+function dueUrgency(t){
+  if(t.status==="Completed") return {level:"normal",days:null};
+  const days=daysBetween(todayISO(),t.due);
+  if(days===null) return {level:"normal",days:null};
+  if(days<0) return {level:"overdue",days};
+  if(days<=3) return {level:"urgent",days};
+  if(days<=7) return {level:"soon",days};
+  return {level:"normal",days};
+}
+function nextAction(t){
+  if(t.status==="Not Started") return ["Responsible", t.R];
+  if(t.status==="Delayed") return ["Verify", t.V];
+  if(t.status==="Initiated"||t.status==="In Progress") return ["Owner", t.O];
+  if(t.status==="Near Completion") return ["Verify", t.V];
+  return ["Approve", t.A];
+}
+
+/* --- engagement / points --- */
+/* ============================================================
+   ACCOUNTABILITY POINTS — justified reward system
+   Outcome:   Completed +30 · In Progress +8 · Not Started 0 · Delayed −10
+   Outcome:   Completed +30 · Near Completion +15 · In Progress +8 · Initiated +4
+              · Not Started 0 · Delayed −10
+   Difficulty: × priority weight  (High 1.5 · Medium 1.0 · Low 0.75)
+   Verify gate: a Completed task counts 60% until management approves it
+   Timeliness: completed on/before due +15, late −5 (only if a due date exists)
+   Overdue & still open (any non-completed task past due): −8
+   Floor: a department/person never displays below 0
+   ============================================================ */
+const PRIO_WEIGHT = { High:1.5, Medium:1.0, Low:0.75 };
+const ACTIVITY_PTS = { "Initiated":4, "In Progress":8, "Near Completion":15 };
+function scorePoints(t){
+  const w = PRIO_WEIGHT[t.prio] || 1.0;
+  let pts = 0;
+  if(t.status === "Completed"){
+    let base = 30 * w;
+    if(!t.approved) base *= 0.6;                    // verification gate
+    pts += base;
+    if(t.due && t.completedDate)                    // timeliness (needs a due date)
+      pts += (new Date(t.completedDate) <= new Date(t.due)) ? 15 : -5;
+  } else if(t.status === "Delayed"){
+    pts += -10 * w;                                  // delay costs — weighted by priority
+  } else if(ACTIVITY_PTS[t.status] !== undefined){   // Initiated / In Progress / Near Completion
+    pts += ACTIVITY_PTS[t.status] * w;
+    if(overdue(t)) pts -= 8;                          // overdue & still open
+  } else {                                           // Not Started
+    if(overdue(t)) pts -= 8;
+  }
+  return Math.round(pts);
+}
+/* delivery variance — actual completion vs due date (transparency) */
+function variance(t){
+  if(t.status!=="Completed" || !t.completedDate || !t.due) return null;
+  const d = daysBetween(t.due, t.completedDate);   // + = late, - = early, 0 = on the day
+  return {
+    days: d,
+    late: d > 0,
+    label: d > 0 ? `${d} day${d===1?'':'s'} late`
+         : d < 0 ? `${Math.abs(d)} day${Math.abs(d)===1?'':'s'} early`
+         : "On time (due date)"
+  };
+}
+function deliveryBadge(t){
+  const v = variance(t);
+  if(!v) return `<span class="delivery dv-none">—</span>`;
+  return `<span class="delivery ${v.late?'dv-late':'dv-ontime'}">${v.late?'▲':'✓'} ${v.label}</span>`;
+}
+
+function deptPoints(){
+  const map={};
+  active().forEach(t=>{
+    const m=map[t.dept]=map[t.dept]||{dept:t.dept,pts:0,done:0,tasks:0};
+    m.tasks++; m.pts += scorePoints(t);
+    if(t.status==="Completed") m.done++;
+  });
+  return Object.values(map).map(m=>({...m, pts:Math.max(0,m.pts)})).sort((a,b)=>b.pts-a.pts);
+}
+/* individual performance by ORSVAI role ("O" = Owner, "R" = Responsible) */
+function personPoints(roleKey){
+  const map={};
+  active().forEach(t=>{
+    const who=(t[roleKey]||"").trim(); if(!who) return;
+    const m=map[who]=map[who]||{name:who,dept:t.dept,pts:0,done:0,tasks:0};
+    m.tasks++; m.pts += scorePoints(t);
+    if(t.status==="Completed") m.done++;
+  });
+  return Object.values(map).map(m=>({...m, pts:Math.max(0,m.pts)})).sort((a,b)=>b.pts-a.pts);
+}
+/* shared leaderboard row renderer — works for departments and individuals */
+function lbHTML(rows){
+  const medal=["gold","silver","bronze"];
+  return rows.length ? rows.slice(0,8).map((d,i)=>`
+    <div class="lb-row">
+      <div class="lb-rank ${medal[i]||''}">${i+1}</div>
+      <div class="lb-name">${d.name||d.dept}<small>${d.done}/${d.tasks} delivered${d.name&&d.dept?` · ${d.dept}`:''}</small></div>
+      <div class="lb-pts">${d.pts}<small> pts</small></div>
+    </div>`).join("") : `<div class="empty" style="padding:22px">No data yet.</div>`;
+}
+function totalPoints(){ return deptPoints().reduce((s,d)=>s+d.pts,0); }
+function completionStreak(){
+  // consecutive recent snapshots that did not drop
+  const snaps=loadSnaps(); const dates=Object.keys(snaps).sort();
+  let streak=0;
+  for(let i=dates.length-1;i>0;i--){ if(snaps[dates[i]]>=snaps[dates[i-1]]) streak++; else break; }
+  return streak;
+}
+const BADGES=[
+  {id:"first",icon:"🎯",label:"First delivery",test:s=>s.completed>=1},
+  {id:"five",icon:"⭐",label:"5 delivered",test:s=>s.completed>=5},
+  {id:"verified",icon:"✓",label:"All verified",test:s=>s.tasks>0 && s.approved===s.tasks},
+  {id:"halfway",icon:"📈",label:"50% portfolio",test:s=>s.pct>=50},
+  {id:"excellence",icon:"🏆",label:"80% excellence",test:s=>s.pct>=80},
+  {id:"momentum",icon:"🔥",label:"Rising momentum",test:s=>s.streak>=3},
+];
+function fireConfetti(){
+  if(matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+  const cols=["#2563EB","#16A34A","#EA580C","#7C3AED","#0D9488","#F59E0B"];
+  for(let i=0;i<70;i++){
+    const p=document.createElement("div"); p.className="confetti-pc";
+    p.style.left=Math.random()*100+"vw"; p.style.background=cols[i%cols.length];
+    p.style.transform=`rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(p);
+    const dur=2200+Math.random()*1400;
+    p.animate([{transform:`translateY(0) rotate(0)`,opacity:1},{transform:`translateY(105vh) rotate(${Math.random()*720}deg)`,opacity:.9}],{duration:dur,easing:"cubic-bezier(.2,.6,.4,1)"}).onfinish=()=>p.remove();
+  }
+}
+
+/* --- auto-archive completed > 1 year --- */
+function autoArchive(){
+  let changed=false;
+  TASKS.forEach(t=>{
+    if(!t.archived && t.status==="Completed" && t.completedDate){
+      if(daysBetween(t.completedDate,todayISO()) >= 365){ t.archived=true; changed=true; }
+    }
+  });
+  if(changed) persistLocal(TASKS);
+}
+
+
+function badge(letter){ const m={O:"o",R:"r",S:"s",V:"v",A:"a",I:"i"}; return m[letter]; }
+
+/* distinct, consistent colour per department (Tab 2 headers) */
+const DEPT_COLORS=["#2563EB","#16A34A","#EA580C","#7C3AED","#0D9488","#0EA5E9",
+  "#DB2777","#CA8A04","#DC2626","#059669","#4F46E5","#0891B2","#B45309","#9333EA","#BE123C","#15803D"];
+function deptColor(dept){
+  let idx = DEPARTMENTS.indexOf(dept);
+  if(idx<0){ idx=0; for(let i=0;i<dept.length;i++) idx=(idx+dept.charCodeAt(i))%DEPT_COLORS.length; } // stable hash for unlisted
+  return DEPT_COLORS[idx % DEPT_COLORS.length];
+}
+let deptSortMode="az";
+
+function renderShellKpis(){
+  const A=active();
+  const total=A.length, done=A.filter(t=>t.status==="Completed").length;
+  const risks=riskRegister().filter(r=>r.sev==="high").length;
+  const overall=total? Math.round(A.reduce((s,t)=>s+taskScore(t),0)/total):0;
+  document.getElementById("shellKpis").innerHTML=[
+    ["Tasks",total],["Completion",overall+"%"],["Completed",done],["High risks",risks]
+  ].map(([l,v])=>`<div class="kpi-chip"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+}
+
+function renderEntryDept(){
+  document.getElementById("f-dept").innerHTML = DEPARTMENTS.map(d=>`<option>${d}</option>`).join("");
+}
+
+function statusPill(s){ return `<span class="status-pill ${STATUS[s].cls}">${s}</span>`; }
+function prioChip(p){ const c={High:"prio-high",Medium:"prio-med",Low:"prio-low"}[p]; return `<span class="chip ${c}">${p} priority</span>`; }
+
+function matrixStrip(t){
+  return `<div class="matrix-strip">${ROLES.map(([k,name])=>{
+    const who=t[k]; const cls="c-"+badge(k);
+    return `<div class="ms-cell ${cls}"><div class="lbl"><span style="width:14px;height:14px;border-radius:50%;display:inline-grid;place-items:center;background:var(--${badge(k)});color:#fff;font-size:8px;font-weight:800">${k}</span>${name}</div><div class="who ${who?'':'empty'}">${who||"unassigned"}</div></div>`;
+  }).join("")}</div>`;
+}
+
+function renderManage(){
+  const wrap=document.getElementById("manageList");
+  document.getElementById("manageLock").style.display = mgmtUnlocked? "none":"flex";
+  const A=active().filter(t=>t.status!=="Completed");
+  if(!A.length){ wrap.innerHTML=`<div class="empty"><div class="ico">📋</div>No open tasks in the review queue. Completed work is in the <b>Completed</b> tab; add new tasks in Tab 1.</div>`; return; }
+  const byDept={};
+  A.forEach(t=>{(byDept[t.dept]=byDept[t.dept]||[]).push(t);});
+  // near-deadline tasks float to the top of each department
+  const urgRank={overdue:0,urgent:1,soon:2,normal:3};
+  // department ordering per the sort control
+  let deptKeys=Object.keys(byDept);
+  if(deptSortMode==="za") deptKeys.sort((a,b)=>b.localeCompare(a));
+  else if(deptSortMode==="count") deptKeys.sort((a,b)=>byDept[b].length-byDept[a].length || a.localeCompare(b));
+  else deptKeys.sort((a,b)=>a.localeCompare(b));
+  wrap.innerHTML = deptKeys.map(dept=>{
+    const items=byDept[dept].sort((a,b)=>urgRank[dueUrgency(a).level]-urgRank[dueUrgency(b).level]);
+    const dc=deptColor(dept);
+    return `<div class="deptblock">
+      <div class="dept-head" style="--dc:${dc};--dcs:${dc}14">
+        <span class="dept-name">${dept}</span>
+        <span class="dept-count">${items.length} task${items.length===1?'':'s'}</span>
+      </div>
+      ${items.map(t=>{
+        const u=dueUrgency(t); const [role,who]=nextAction(t);
+        let urgFlag="";
+        if(u.level==="overdue") urgFlag=`<span class="urg-flag urg-overdue"><span class="pd"></span>${Math.abs(u.days)}d overdue</span>`;
+        else if(u.level==="urgent") urgFlag=`<span class="urg-flag urg-urgent"><span class="pd"></span>due in ${u.days}d</span>`;
+        else if(u.level==="soon") urgFlag=`<span class="urg-flag urg-soon">due in ${u.days}d</span>`;
+        const tip = u.level!=="normal" ? `<div class="due-tip"><div class="cd">${u.level==="overdue"?Math.abs(u.days)+" days":u.days+" days"}<small>${u.level==="overdue"?" overdue":" to deadline"}</small></div><div class="nx">Next move sits with <b>${role}: ${who||"unassigned"}</b>. Due ${fmt(t.due)}.</div></div>`:"";
+        return `
+        <div class="tcard" data-urg="${u.level}">
+          ${tip}
+          <div class="tcard-top">
+            <div class="title"><h4>${t.title}</h4><p>${t.desc||""}</p>
+              <div class="meta">${prioChip(t.prio)} ${urgFlag} ${t.needsUpdate?'<span class="chip needs-update">↩ needs update</span>':''} ${t.approved?'<span class="chip approved-flag">✓ approved</span>':'<span class="chip">pending approval</span>'}</div>
+            </div>
+            <div>${statusPill(t.status)}</div>
+          </div>
+          ${t.feedback?`<div class="fb-note"><b>Feedback:</b> ${t.feedback}</div>`:""}
+          ${matrixStrip(t)}
+          <div class="tcard-foot">
+            <div class="dates"><span>Start <b>${fmt(t.start)}</b></span><span>Due <b>${fmt(t.due)}</b></span><span>Duration <b>${daysBetween(t.start,t.due)??"—"} days</b></span></div>
+            <div class="foot-actions">
+              <select class="btn-sm" style="width:auto;padding:7px 10px" data-status="${t.id}" ${mgmtUnlocked?'':'disabled'}>
+                ${Object.keys(STATUS).map(s=>`<option ${s===t.status?'selected':''}>${s}</option>`).join("")}
+              </select>
+              <button class="btn btn-ghost btn-sm" data-feedback="${t.id}" ${mgmtUnlocked?'':'disabled'}>↩ Request update</button>
+              <button class="btn btn-ok btn-sm" data-approve="${t.id}" ${(mgmtUnlocked&&!t.approved)?'':'disabled'}>${t.approved?'Approved':'Approve'}</button>
+              <button class="btn btn-danger btn-sm" data-remove="${t.id}" ${mgmtUnlocked?'':'disabled'}>Remove</button>
+            </div>
+          </div>
+        </div>`;}).join("")}
+    </div>`;
+  }).join("");
+}
+
+function renderUpdateQueue(){
+  const q=active().filter(t=>t.needsUpdate);
+  const banner=document.getElementById("updateQueue");
+  if(!q.length){ banner.style.display="none"; return; }
+  banner.style.display="block";
+  document.getElementById("updateQueueList").innerHTML=q.map(t=>`
+    <div class="uq-item">
+      <div class="uq-t">${t.title} <span class="uq-fb">— ${t.dept}${t.feedback?' · "'+t.feedback+'"':''}</span></div>
+      <button class="btn btn-primary btn-sm" data-edit="${t.id}">Update now</button>
+    </div>`).join("");
+}
+
+let curPeriod="weekly";
+function renderProgress(){
+  const A=active();
+  const stats=deptStats();
+  const total=A.length;
+  const done=A.filter(t=>t.status==="Completed").length;
+  const delayed=A.filter(t=>t.status==="Delayed").length;
+  const risks=riskRegister();
+  document.getElementById("progKpis").innerHTML=[
+    ["k-done",done,"Completed tasks"],
+    ["k-prog",A.filter(t=>UNDERWAY.includes(t.status)).length,"Underway"],
+    ["k-delay",delayed,"Delayed"],
+    ["k-risk",risks.filter(r=>r.sev==="high").length,"High-severity risks"]
+  ].map(([c,n,cap])=>`<div class="kcard ${c}"><div class="num">${n}</div><div class="cap">${cap}</div></div>`).join("");
+
+  renderFocus();
+  renderTrend();
+
+  document.getElementById("deptProgress").innerHTML = stats.sort((a,b)=>b.pct-a.pct).map(s=>{
+    const col = s.pct>=80?"#16A34A":s.pct>=50?"#F59E0B":"#EF4444";
+    const track = STATUS_ORDER.map(st=> s.counts[st]? `<span style="width:${s.counts[st]/s.count*100}%;background:${STATUS[st].color}"></span>`:"").join("");
+    const legend = STATUS_ORDER.map(st=> s.counts[st]? `<span><span class="dot" style="background:${STATUS[st].color}"></span>${s.counts[st]} ${st.toLowerCase()}</span>`:"").join("");
+    return `<div class="deptprog">
+      <div class="deptprog-head"><span class="name">${s.dept}</span><span class="pct" style="color:${col}">${s.pct}%</span></div>
+      <div class="track">${track}</div>
+      <div class="track-legend">${legend}</div></div>`;
+  }).join("") || `<div class="empty">No department data yet.</div>`;
+
+  const rl=document.getElementById("riskList");
+  rl.innerHTML = risks.length? risks.map(r=>`
+    <div class="risk-item"><div class="risk-sev sev-${r.sev}"></div>
+      <div class="risk-body"><div class="rt">${r.title}</div><div class="rd">${r.desc}</div></div>
+      <span class="risk-tag rtag-${r.sev}">${r.tag}</span></div>`).join("")
+    : `<div class="empty" style="padding:30px"><div class="ico">✓</div>No active risks. Every task is on track and verified.</div>`;
+}
+
+function renderFocus(){
+  const wrap=document.getElementById("focusWrap");
+  const near=active().map(t=>({t,u:dueUrgency(t)}))
+    .filter(x=>x.u.level!=="normal")
+    .sort((a,b)=>(a.u.days)-(b.u.days));
+  if(!near.length){ wrap.style.display="none"; return; }
+  wrap.style.display="block";
+  document.getElementById("focusStrip").innerHTML=near.slice(0,8).map(({t,u})=>{
+    const cls=u.level==="overdue"?"fc-overdue":u.level==="urgent"?"fc-urgent":"";
+    const cd=u.level==="overdue"?`${Math.abs(u.days)}d overdue`:`${u.days}d to deadline`;
+    const [role,who]=nextAction(t);
+    return `<div class="focus-card ${cls}">
+      <div class="fc-cd ${u.level==="overdue"?'late':''}">${cd}</div>
+      <div class="fc-t">${t.title}</div>
+      <div class="fc-d">${t.dept} · due ${fmt(t.due)}</div>
+      <div class="fc-o">▸ ${role}: ${who||"unassigned"}</div>
+    </div>`;
+  }).join("");
+}
+
+let trendChart=null;
+function renderTrend(){
+  const {labels,values}=periodSeries(curPeriod);
+  // delta vs previous period
+  const dch=document.getElementById("periodDelta");
+  if(values.length>=2){
+    const d=values[values.length-1]-values[values.length-2];
+    const cls=d>0?"delta-up":d<0?"delta-down":"delta-flat";
+    const arrow=d>0?"▲":d<0?"▼":"—";
+    dch.innerHTML=`<span class="delta-chip ${cls}">${arrow} ${d>0?'+':''}${d} pts vs last ${curPeriod.replace('ly','')}</span>`;
+  } else dch.innerHTML=`<span class="delta-chip delta-flat">Trend builds as tasks are tracked</span>`;
+  if(trendChart) trendChart.destroy();
+  const ctx=document.getElementById("trendChart");
+  const grad=ctx.getContext("2d").createLinearGradient(0,0,0,200);
+  grad.addColorStop(0,"rgba(37,99,235,.22)"); grad.addColorStop(1,"rgba(37,99,235,0)");
+  trendChart=new Chart(ctx,{
+    type:"line",
+    data:{labels,datasets:[{data:values,borderColor:"#2563EB",backgroundColor:grad,fill:true,
+      tension:.35,borderWidth:2.5,pointRadius:3,pointBackgroundColor:"#2563EB",pointHoverRadius:5}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+"% completion"}}},
+      scales:{y:{min:0,max:100,grid:{color:"#EDF0F5"},ticks:{callback:v=>v+"%",font:{size:10}}},
+              x:{grid:{display:false},ticks:{font:{size:10}}}},
+      responsive:true,maintainAspectRatio:false}
+  });
+}
+
+let charts={};
+function renderBoard(){
+  const A=active();
+  const stats=deptStats();
+  const total=A.length;
+  const overall=total? Math.round(A.reduce((s,t)=>s+taskScore(t),0)/total):0;
+  const approved=A.filter(t=>t.approved).length;
+  const depts=stats.length;
+  document.getElementById("boardKpis").innerHTML=[
+    ["k-done",overall+"%","Portfolio completion"],
+    ["k-prog",depts,"Active departments"],
+    ["k-delay",approved+"/"+total,"Approved & verified"],
+    ["k-risk",riskRegister().filter(r=>r.sev==="high").length,"Board-level risks"]
+  ].map(([c,n,cap])=>`<div class="kcard ${c}"><div class="num">${n}</div><div class="cap">${cap}</div></div>`).join("");
+
+  // engagement KPIs
+  const completed=A.filter(t=>t.status==="Completed").length;
+  document.getElementById("engKpis").innerHTML=[
+    ["🏅",totalPoints(),"Accountability points"],
+    ["✅",completed,"Tasks delivered"],
+    ["🔥",completionStreak(),"Progress streak"],
+    ["📦",TASKS.filter(t=>t.archived).length,"Archived (1yr+)"]
+  ].map(([ico,n,cap])=>`<div class="eng-card"><div class="ico">${ico}</div><div class="num">${n}</div><div class="cap">${cap}</div></div>`).join("");
+
+  // leaderboards — department, and individuals by Owner / Responsible role
+  document.getElementById("leaderboard").innerHTML = lbHTML(deptPoints().slice(0,6));
+  document.getElementById("ownerLeaderboard").innerHTML = lbHTML(personPoints("O"));
+  document.getElementById("respLeaderboard").innerHTML = lbHTML(personPoints("R"));
+
+  // badges
+  const s={completed,tasks:total,approved,pct:overall,streak:completionStreak()};
+  document.getElementById("badgeRow").innerHTML=BADGES.map(b=>{
+    const got=b.test(s);
+    return `<span class="badge ${got?'earned':''}">${b.icon} ${b.label}${got?'':' · locked'}</span>`;
+  }).join("");
+
+  // dept bar
+  const ds=stats.sort((a,b)=>b.pct-a.pct);
+  if(charts.dept) charts.dept.destroy();
+  charts.dept=new Chart(document.getElementById("deptChart"),{
+    type:"bar",
+    data:{labels:ds.map(s=>s.dept),datasets:[{data:ds.map(s=>s.pct),
+      backgroundColor:ds.map(s=>s.pct>=80?"#16A34A":s.pct>=50?"#F59E0B":"#EF4444"),borderRadius:6,barThickness:16}]},
+    options:{indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+"% verified"}}},
+      scales:{x:{max:100,grid:{color:"#EDF0F5"},ticks:{callback:v=>v+"%",font:{size:10}}},
+              y:{grid:{display:false},ticks:{font:{size:10.5}}}},
+      responsive:true,maintainAspectRatio:false}
+  });
+
+  // status doughnut — all six stages
+  const dLabels = STATUS_ORDER.filter(s=>A.some(t=>t.status===s));
+  const dCounts = dLabels.map(s=>A.filter(t=>t.status===s).length);
+  if(charts.status) charts.status.destroy();
+  charts.status=new Chart(document.getElementById("statusChart"),{
+    type:"doughnut",
+    data:{labels:dLabels.length?dLabels:["No tasks"],datasets:[{data:dCounts.length?dCounts:[1],
+      backgroundColor:dLabels.length?dLabels.map(s=>STATUS[s].color):["#E4E8EF"],borderWidth:2,borderColor:"#fff"}]},
+    options:{cutout:"62%",plugins:{legend:{position:"bottom",labels:{font:{size:11},padding:12,boxWidth:12,usePointStyle:true}}},
+      responsive:true,maintainAspectRatio:false}
+  });
+
+  // scorecard — ranked by progress (highest = 1; equal % share a rank)
+  const nameList=(arr)=>{ arr=[...new Set(arr.map(x=>(x||"").trim()).filter(Boolean))];
+    if(!arr.length) return '<span style="color:#B6C0CE">—</span>';
+    return arr.length<=2 ? arr.join(", ") : arr.slice(0,2).join(", ")+` <span class="mono" style="color:var(--muted);font-size:10.5px">+${arr.length-2}</span>`; };
+  let lastPct=null,lastRank=0;
+  ds.forEach((s,i)=>{ if(s.pct===lastPct){ s._rank=lastRank; } else { s._rank=i+1; lastRank=i+1; lastPct=s.pct; } });
+  const medal=["gold","silver","bronze"];
+  document.getElementById("scoreTable").innerHTML=`
+    <thead><tr><th>Rank</th><th>Department</th><th>Owner(s)</th><th>Responsible(s)</th><th>Tasks</th><th>Progress</th><th>On-time</th><th>Risks</th><th>Verdict</th></tr></thead>
+    <tbody>${ds.map(s=>{
+      const dTasks=A.filter(t=>t.dept===s.dept);
+      const done=dTasks.filter(t=>t.status==="Completed" && t.completedDate && t.due);
+      const onTime=done.filter(t=>!variance(t).late).length;
+      const otPct = done.length ? Math.round(onTime/done.length*100) : null;
+      const otCell = otPct===null
+        ? `<span class="delivery dv-none">—</span>`
+        : `<span class="delivery ${otPct>=80?'dv-ontime':'dv-late'}">${onTime}/${done.length} · ${otPct}%</span>`;
+      const drisks=riskRegister().filter(r=>r.title.includes("— "+s.dept)).length;
+      const verdict=s.pct>=80&&drisks===0?["v-strong","On track"]:s.pct>=50?["v-watch","Watch"]:["v-risk","At risk"];
+      return `<tr>
+        <td><span class="lb-rank ${medal[s._rank-1]||''}">${s._rank}</span></td>
+        <td class="dept-n">${s.dept}</td>
+        <td>${nameList(dTasks.map(t=>t.O))}</td>
+        <td>${nameList(dTasks.map(t=>t.R))}</td>
+        <td class="mono">${s.count}</td>
+        <td><span class="minibar"><span style="width:${s.pct}%;background:${s.pct>=80?'#16A34A':s.pct>=50?'#F59E0B':'#EF4444'}"></span></span> <span class="mono" style="font-size:11px">${s.pct}%</span></td>
+        <td>${otCell}</td>
+        <td class="mono">${drisks}</td>
+        <td><span class="verdict ${verdict[0]}">${verdict[1]}</span></td>
+      </tr>`;
+    }).join("")}</tbody>`;
+}
+
+function monthLabel(d){ return d? new Date(d).toLocaleString(undefined,{month:"long",year:"numeric"}) : "No date"; }
+function byDateDesc(a,b){ return new Date(b.completedDate||0)-new Date(a.completedDate||0); }
+function sectionHead(title,note,color){ return `<h3 style="font-size:14px;color:${color||'var(--ink)'};font-family:'Sora';display:flex;align-items:center;gap:9px;margin:18px 0 12px"><span style="flex:0">${title}</span>${note?`<span style="font-size:11.5px;font-weight:400;color:var(--muted)">— ${note}</span>`:''}</h3>`; }
+
+function completedCard(t,{verify=false,reopen=false,restore=false}={}){
+  const flag = verify
+    ? '<span class="chip needs-update">⏳ awaiting verification</span>'
+    : '<span class="chip approved-flag">✓ verified</span>';
+  const actions = [
+    verify ? `<button class="btn btn-ok btn-sm" data-cverify="${t.id}" ${mgmtUnlocked?'':'disabled'}>Approve &amp; verify</button>`:'',
+    reopen ? `<button class="btn btn-ghost btn-sm" data-reopen="${t.id}" ${mgmtUnlocked?'':'disabled'}>Reopen</button>`:'',
+    restore? `<button class="btn btn-ghost btn-sm" data-restore="${t.id}" ${mgmtUnlocked?'':'disabled'}>Restore to board</button>`:''
+  ].join("");
+  return `<div class="tcard" style="${restore?'opacity:.92':''}">
+    <div class="tcard-top">
+      <div class="title"><h4>${t.title}</h4><p>${t.desc||""}</p>
+        <div class="meta"><span class="chip">${t.dept}</span>${flag}<span class="chip">completed ${fmt(t.completedDate)}</span>${deliveryBadge(t)}</div>
+      </div><div>${statusPill(t.status)}</div>
+    </div>
+    ${matrixStrip(t)}
+    <div class="tcard-foot">
+      <div class="dates"><span>Start <b>${fmt(t.start)}</b></span><span>Due <b>${fmt(t.due)}</b></span><span>Completed <b>${fmt(t.completedDate)}</b></span></div>
+      <div class="foot-actions">${actions}</div>
+    </div></div>`;
+}
+
+function groupByMonth(list,opts){
+  const buckets={};
+  list.sort(byDateDesc).forEach(t=>{(buckets[monthLabel(t.completedDate)]=buckets[monthLabel(t.completedDate)]||[]).push(t);});
+  return Object.entries(buckets).map(([month,items])=>`
+    <div class="deptblock"><h3><span class="count" style="background:var(--bg)">${month}</span><span class="count">${items.length}</span><span class="bar"></span></h3>
+      ${items.map(t=>completedCard(t,opts)).join("")}</div>`).join("");
+}
+
+function renderArchive(){
+  const al=document.getElementById("archiveLock"); if(al) al.style.display=mgmtUnlocked?"none":"flex";
+  const completedRecent = active().filter(t=>t.status==="Completed"); // <1yr (active excludes archived)
+  const archived = TASKS.filter(t=>t.archived);
+  const awaiting = completedRecent.filter(t=>!t.approved);
+  const verified = completedRecent.filter(t=>t.approved);
+
+  document.getElementById("archiveKpis").innerHTML=[
+    ["k-done",completedRecent.length,"Completed this year"],
+    ["k-prog",awaiting.length,"Awaiting verification"],
+    ["k-delay",verified.length,"Verified & closed"],
+    ["k-risk",archived.length,"Archived · 1yr+"]
+  ].map(([c,n,cap])=>`<div class="kcard ${c}"><div class="num">${n}</div><div class="cap">${cap}</div></div>`).join("");
+
+  const wrap=document.getElementById("archiveList");
+  let html="";
+  if(awaiting.length){
+    html += sectionHead("⏳ Awaiting verification","sign off to lock the ORSVAI score","var(--s)");
+    html += awaiting.sort(byDateDesc).map(t=>completedCard(t,{verify:true,reopen:true})).join("");
+  }
+  if(verified.length){
+    html += sectionHead("✓ Recently completed","verified & delivered","var(--r)");
+    html += groupByMonth(verified,{reopen:true});
+  }
+  if(archived.length){
+    html += sectionHead("📦 Archived · 1 year +","kept for audit & board history");
+    html += groupByMonth(archived,{restore:true});
+  }
+  wrap.innerHTML = html || `<div class="empty"><div class="ico">✓</div>No completed projects yet. Delivered tasks appear here, organised by date.</div>`;
+}
+
+function renderAll(){ autoArchive(); recordSnapshot(); renderShellKpis(); renderManage(); renderUpdateQueue(); renderProgress(); renderArchive(); }
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2600); }
+
+// tabs
+document.getElementById("tabs").addEventListener("click",e=>{
+  const b=e.target.closest(".tab"); if(!b) return;
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  const v=b.dataset.view;
+  document.getElementById("view-"+v).classList.add("active");
+  if(v==="board") renderBoard();
+  if(v==="progress") renderProgress();
+  if(v==="archive") renderArchive();
+});
+
+// duration auto-calc
+function recalcDur(){ const d=daysBetween(document.getElementById("f-start").value,document.getElementById("f-due").value); document.getElementById("f-dur").value = d!=null? d+" days":""; }
+document.getElementById("f-start").addEventListener("change",recalcDur);
+document.getElementById("f-due").addEventListener("change",recalcDur);
+
+// actual completion date — only relevant when the task is Completed
+function syncCompletedField(){
+  const isDone = document.getElementById("f-status").value==="Completed";
+  document.getElementById("completedWrap").style.display = isDone ? "flex" : "none";
+  const actual=document.getElementById("f-actual");
+  if(isDone && !actual.value) actual.value = todayISO();   // default to today, editable
+  if(!isDone){ actual.value=""; }
+  showVariance();
+}
+function showVariance(){
+  const note=document.getElementById("varianceNote");
+  const due=document.getElementById("f-due").value;
+  const actual=document.getElementById("f-actual").value;
+  note.className="var-note";
+  if(document.getElementById("f-status").value!=="Completed" || !actual){ note.textContent=""; return; }
+  if(!due){ note.textContent="No due date set — delivery timing can't be measured."; note.classList.add("show","var-none"); return; }
+  const d=daysBetween(due,actual);
+  if(d>0){ note.textContent=`▲ Delivered ${d} day${d===1?'':'s'} LATE (due ${fmt(due)}). Timeliness: −5 pts.`; note.classList.add("show","var-late"); }
+  else { note.textContent=`✓ Delivered ${d<0?Math.abs(d)+" day"+(Math.abs(d)===1?'':'s')+" early":"on the due date"} (due ${fmt(due)}). Timeliness: +15 pts.`; note.classList.add("show","var-early"); }
+}
+document.getElementById("f-status").addEventListener("change",syncCompletedField);
+document.getElementById("f-actual").addEventListener("change",showVariance);
+document.getElementById("f-due").addEventListener("change",showVariance);
+
+// add / update task
+let editingId=null;
+const addBtn=document.getElementById("addTask");
+function readForm(){
+  return {
+    dept:document.getElementById("f-dept").value,
+    title:document.getElementById("f-title").value.trim(),
+    desc:document.getElementById("f-desc").value.trim(),
+    prio:document.getElementById("f-prio").value, status:document.getElementById("f-status").value,
+    start:document.getElementById("f-start").value, due:document.getElementById("f-due").value,
+    actual:document.getElementById("f-actual").value,
+    O:document.getElementById("f-O").value.trim(), R:document.getElementById("f-R").value.trim(),
+    S:document.getElementById("f-S").value.trim(), V:document.getElementById("f-V").value.trim(),
+    A:document.getElementById("f-A").value.trim(), I:document.getElementById("f-I").value.trim()
+  };
+}
+function fillForm(t){
+  document.getElementById("f-dept").value=t.dept; document.getElementById("f-title").value=t.title;
+  document.getElementById("f-desc").value=t.desc||""; document.getElementById("f-prio").value=t.prio;
+  document.getElementById("f-status").value=t.status; document.getElementById("f-start").value=t.start||"";
+  document.getElementById("f-due").value=t.due||""; recalcDur();
+  ["O","R","S","V","A","I"].forEach(k=>document.getElementById("f-"+k).value=t[k]||"");
+  document.getElementById("f-actual").value = t.completedDate||"";
+  syncCompletedField();
+}
+function enterEdit(id){
+  const t=TASKS.find(x=>x.id===id); if(!t) return;
+  editingId=id; fillForm(t);
+  document.getElementById("editBar").classList.add("show");
+  addBtn.textContent="Save update";
+  document.querySelector('.tab[data-view="entry"]').click();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function exitEditMode(){
+  editingId=null; document.getElementById("editBar").classList.remove("show");
+  addBtn.textContent="Add development task"; clearForm();
+}
+document.getElementById("exitEdit").addEventListener("click",exitEditMode);
+
+addBtn.addEventListener("click", async ()=>{
+  const f=readForm();
+  if(!f.title){ toast("Add a task title first"); return; }
+  if(!f.O){ toast("No task without an Owner — assign O"); document.getElementById("f-O").focus(); return; }
+
+  if(editingId){
+    const t=TASKS.find(x=>x.id===editingId); const wasComplete=t.status==="Completed";
+    const actual = f.actual; delete f.actual;
+    Object.assign(t,f); t.needsUpdate=false; t.feedback="";
+    if(f.status==="Completed") t.completedDate = actual || t.completedDate || todayISO();
+    else t.completedDate = null;
+    t.history=t.history||[]; t.history.push({date:todayISO(),status:f.status,note:"updated"});
+    persistLocal(TASKS); await Store.update(editingId,{...f,completedDate:t.completedDate,needsUpdate:false,feedback:""});
+    renderAll(); exitEditMode(); toast("Task updated — back in the review queue");
+    if(f.status==="Completed" && !wasComplete) fireConfetti();
+    return;
+  }
+  const actual = f.actual; delete f.actual;
+  const task=Object.assign({id:uid(),approved:false,archived:false,needsUpdate:false,feedback:"",
+    completedDate: f.status==="Completed" ? (actual||todayISO()) : null, created:todayISO(),
+    history:[{date:todayISO(),status:f.status,note:"created"}]}, f);
+  TASKS.push(task); persistLocal(TASKS); await Store.save(task);
+  renderAll(); clearForm(); toast("Task added — pending approval in Tab 2");
+});
+function clearForm(){ ["f-title","f-desc","f-O","f-R","f-S","f-V","f-A","f-I","f-start","f-due","f-dur","f-actual"].forEach(id=>document.getElementById(id).value=""); document.getElementById("f-prio").value="Medium"; document.getElementById("f-status").value="Not Started"; syncCompletedField(); }
+document.getElementById("clearForm").addEventListener("click",clearForm);
+
+// management actions (delegated)
+document.getElementById("manageList").addEventListener("click", async e=>{
+  if(!mgmtUnlocked) return;
+  const ap=e.target.closest("[data-approve]"); const rm=e.target.closest("[data-remove]"); const fb=e.target.closest("[data-feedback]");
+  if(fb){
+    const id=fb.dataset.feedback; const t=TASKS.find(x=>x.id===id);
+    const note=prompt("Feedback for the team — what needs updating?", t.feedback||"");
+    if(note===null) return;
+    t.needsUpdate=true; t.feedback=note.trim();
+    persistLocal(TASKS); await Store.update(id,{needsUpdate:true,feedback:t.feedback});
+    renderAll(); toast("Sent back to Tab 1 for update");
+  }
+  if(ap){ const id=ap.dataset.approve; const t=TASKS.find(x=>x.id===id); t.approved=true; persistLocal(TASKS); await Store.update(id,{approved:true}); renderAll(); toast("Task approved & verified"); if(t.status==="Completed") fireConfetti(); }
+  if(rm){ const id=rm.dataset.remove; if(!confirm("Remove this task permanently?")) return; TASKS=TASKS.filter(x=>x.id!==id); persistLocal(TASKS); await Store.remove(id); renderAll(); toast("Task removed"); }
+});
+document.getElementById("manageList").addEventListener("change", async e=>{
+  if(!mgmtUnlocked) return;
+  const s=e.target.closest("[data-status]"); if(!s) return;
+  const id=s.dataset.status; const t=TASKS.find(x=>x.id===id); const wasComplete=t.status==="Completed";
+  t.status=s.value;
+  if(s.value==="Completed" && !t.completedDate) t.completedDate=todayISO();
+  if(s.value!=="Completed") t.completedDate=null;
+  (t.history=t.history||[]).push({date:todayISO(),status:s.value,note:"status change"});
+  persistLocal(TASKS); await Store.update(id,{status:s.value,completedDate:t.completedDate});
+  renderAll(); toast("Status updated");
+  if(s.value==="Completed" && !wasComplete) fireConfetti();
+});
+
+// update queue → load into form
+document.getElementById("updateQueueList").addEventListener("click",e=>{
+  const b=e.target.closest("[data-edit]"); if(b) enterEdit(b.dataset.edit);
+});
+
+// completed / archive actions
+document.getElementById("archiveList").addEventListener("click", async e=>{
+  if(!mgmtUnlocked) return;
+  const rs=e.target.closest("[data-restore]"); const cv=e.target.closest("[data-cverify]"); const ro=e.target.closest("[data-reopen]");
+  if(cv){ const t=TASKS.find(x=>x.id===cv.dataset.cverify); t.approved=true; persistLocal(TASKS); await Store.update(t.id,{approved:true}); renderAll(); renderArchive(); toast("Verified & signed off"); fireConfetti(); }
+  if(ro){ const t=TASKS.find(x=>x.id===ro.dataset.reopen); t.status="In Progress"; t.completedDate=null;
+    (t.history=t.history||[]).push({date:todayISO(),status:"In Progress",note:"reopened"});
+    persistLocal(TASKS); await Store.update(t.id,{status:"In Progress",completedDate:null}); renderAll(); renderArchive(); toast("Reopened — back in the review queue"); }
+  if(rs){ const t=TASKS.find(x=>x.id===rs.dataset.restore); t.archived=false; persistLocal(TASKS); await Store.update(t.id,{archived:false}); renderAll(); renderArchive(); toast("Restored to active board"); }
+});
+
+// department sort (Tab 2)
+document.getElementById("deptSort").addEventListener("change",e=>{
+  deptSortMode=e.target.value; renderManage();
+});
+
+// period toggle
+document.getElementById("periodToggle").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-p]"); if(!b) return;
+  document.querySelectorAll("#periodToggle button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); curPeriod=b.dataset.p; renderTrend();
+});
+
+// ---- site sign-in gate (tier 1) + inactivity auto sign-out ----
+const gate=document.getElementById("gate");
+const SITE_SESSION="orsvai_site_v1";
+const IDLE_MS=120000;            // 2 minutes of inactivity → auto sign-out
+let idleTimer=null;
+function signedIn(){ return gate.classList.contains("hide"); }
+function resetIdle(){
+  if(!signedIn()) return;        // don't run the clock while on the sign-in screen
+  clearTimeout(idleTimer);
+  idleTimer=setTimeout(autoSignOut, IDLE_MS);
+}
+function openSite(){
+  gate.classList.add("hide"); setTimeout(()=>{ gate.style.display="none"; },400);
+  document.getElementById("gateErr").textContent="";
+  resetIdle();
+}
+function autoSignOut(){
+  clearTimeout(idleTimer);
+  try{ sessionStorage.removeItem(SITE_SESSION); }catch(e){}
+  mgmtUnlocked=false;            // also drop management access
+  const sc=document.getElementById("scrim"); if(sc) sc.classList.remove("show");
+  renderManage(); renderArchive();
+  gate.style.display="grid"; gate.classList.remove("hide");
+  document.getElementById("gatePw").value="";
+  document.getElementById("gateErr").textContent="Signed out after 2 minutes of inactivity — please sign in again.";
+  setTimeout(()=>document.getElementById("gatePw").focus(),60);
+}
+async function passOK(input, plain, hash){
+  const v=(input||"").trim();
+  if(plain && v===plain) return true;          // direct check — always reliable
+  try{ if(hash && (await sha256(v))===hash) return true; }catch(e){}
+  return false;
+}
+async function trySite(){
+  const v=document.getElementById("gatePw").value;
+  if(await passOK(v, CONFIG.SITE_PASS, CONFIG.SITE_HASH)){
+    try{sessionStorage.setItem(SITE_SESSION,"1");}catch(e){} openSite();
+  } else {
+    document.getElementById("gateErr").textContent="Incorrect password — try again.";
+    document.getElementById("gatePw").select();
+  }
+}
+document.getElementById("gateBtn").addEventListener("click",trySite);
+document.getElementById("gatePw").addEventListener("keydown",e=>{ if(e.key==="Enter") trySite(); });
+["mousemove","mousedown","keydown","scroll","touchstart","click"].forEach(ev=>
+  document.addEventListener(ev, resetIdle, {passive:true}));
+try{ if(sessionStorage.getItem(SITE_SESSION)==="1") openSite(); else document.getElementById("gatePw").focus(); }catch(e){ document.getElementById("gatePw").focus(); }
+
+// ---- management modal (tier 2) ----
+const scrim=document.getElementById("scrim");
+function openMgmt(e){ if(e)e.preventDefault(); scrim.classList.add("show"); setTimeout(()=>document.getElementById("pwInput").focus(),50); }
+document.getElementById("unlockBtn").addEventListener("click",openMgmt);
+document.getElementById("unlockBtn2").addEventListener("click",openMgmt);
+document.getElementById("pwCancel").addEventListener("click",()=>scrim.classList.remove("show"));
+document.getElementById("pwSubmit").addEventListener("click", async ()=>{
+  const val=document.getElementById("pwInput").value;
+  if(await passOK(val, CONFIG.MGMT_PASS, CONFIG.MGMT_HASH)){
+    mgmtUnlocked=true; scrim.classList.remove("show"); document.getElementById("pwInput").value="";
+    renderManage(); renderArchive(); toast("Management access granted");
+  } else { toast("Incorrect key"); }
+});
+document.getElementById("pwInput").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("pwSubmit").click(); });
+
+// ---- backup / restore (Owner-only; durable copy the user controls) ----
+function downloadFile(name, text){
+  const blob=new Blob([text],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },120);
+}
+let ownerUnlocked=false, pendingOwnerAction=null;
+const ownerScrim=document.getElementById("ownerScrim");
+function requireOwner(action){
+  if(ownerUnlocked){ action(); return; }
+  pendingOwnerAction=action;
+  ownerScrim.classList.add("show");
+  setTimeout(()=>document.getElementById("ownerPw").focus(),50);
+}
+document.getElementById("ownerCancel").addEventListener("click",()=>{ ownerScrim.classList.remove("show"); pendingOwnerAction=null; });
+document.getElementById("ownerSubmit").addEventListener("click", async ()=>{
+  const v=document.getElementById("ownerPw").value;
+  if(await passOK(v, CONFIG.OWNER_PASS, CONFIG.OWNER_HASH)){
+    ownerUnlocked=true; ownerScrim.classList.remove("show"); document.getElementById("ownerPw").value="";
+    toast("Owner access granted");
+    const act=pendingOwnerAction; pendingOwnerAction=null; if(act) act();
+  } else { toast("Incorrect Owner key"); }
+});
+document.getElementById("ownerPw").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("ownerSubmit").click(); });
+
+function doExport(){
+  const payload={app:"ORSVAI", version:2, exportedAt:new Date().toISOString(), tasks:TASKS, snapshots:loadSnaps()};
+  downloadFile(`orsvai-backup-${todayISO()}.json`, JSON.stringify(payload,null,2));
+  toast(`Backup downloaded — ${TASKS.length} task${TASKS.length===1?'':'s'}`);
+}
+document.getElementById("exportData").addEventListener("click",()=> requireOwner(doExport));
+document.getElementById("importData").addEventListener("click",()=> requireOwner(()=>document.getElementById("importFile").click()));
+document.getElementById("importFile").addEventListener("change", e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      const tasks=Array.isArray(data)?data:data.tasks;
+      if(!Array.isArray(tasks)){ toast("That doesn't look like an ORSVAI backup"); e.target.value=""; return; }
+      if(!confirm(`Restore ${tasks.length} task(s) from this backup? This replaces the current list.`)){ e.target.value=""; return; }
+      TASKS=tasks; persistLocal(TASKS);
+      if(data.snapshots && typeof data.snapshots==="object"){ SNAPS=Object.assign(loadSnaps(), data.snapshots); saveSnaps(); }
+      renderAll(); toast(`Restored ${tasks.length} task(s)`);
+    }catch(err){ toast("Could not read that backup file"); }
+    e.target.value="";
+  };
+  reader.readAsText(file);
+});
+
+/* Repair: a Completed task must always have a completion date. Older records
+   (e.g. saved before the backend stored completedDate) get it back-filled from
+   the due date, then the fix is pushed so it persists. */
+async function repairCompletedDates(){
+  const fixes=[];
+  TASKS.forEach(t=>{
+    if(t.status==="Completed" && !t.completedDate){
+      t.completedDate = t.due || t.created || todayISO();
+      fixes.push(t);
+    }
+  });
+  if(fixes.length){
+    persistLocal(TASKS);
+    for(const t of fixes){ try{ await Store.update(t.id,{completedDate:t.completedDate}); }catch(e){} }
+  }
+}
+
+/* ---------- boot ---------- */
+(async function init(){
+  renderEntryDept();
+  document.getElementById("f-start").value=todayISO();
+  TASKS = await Store.load();
+  await repairCompletedDates();
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
