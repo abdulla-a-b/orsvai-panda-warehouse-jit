@@ -153,6 +153,11 @@ textarea{resize:vertical;min-height:72px}
 .st-init{background:#A855F7}.st-near{background:#0EA5E9}
 .approved-flag{background:var(--a-soft);color:var(--a);border:1px solid #B8E0DB}
 .sec-chip{background:var(--a-soft);color:var(--a);border:1px solid #B8E0DB;font-weight:700}
+/* Tab 2 — section sub-header inside a department */
+.section-head{display:flex;align-items:center;gap:9px;margin:14px 0 10px;padding:6px 13px;border-left:3px solid var(--a);border-radius:8px}
+.section-head .sh-name{font-family:'Sora';font-weight:700;font-size:12.5px;letter-spacing:.02em}
+.section-head .sh-name::before{content:"▸ "}
+.section-head .sh-count{margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;color:var(--muted);background:#fff;border:1px solid var(--hair);border-radius:20px;padding:2px 9px}
 .matrix-strip{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--hair-2)}
 .ms-cell{padding:9px 11px;border-right:1px solid var(--hair-2);min-height:54px}
 .ms-cell:last-child{border-right:none}
@@ -1177,24 +1182,42 @@ function renderManage(){
   wrap.innerHTML = deptKeys.map(dept=>{
     const items=byDept[dept].sort((a,b)=>urgRank[dueUrgency(a).level]-urgRank[dueUrgency(b).level]);
     const dc=deptColor(dept);
+    // group this department's tasks by section (in the department's defined order)
+    const bySec={};
+    items.forEach(t=>{ const s=(t.section&&t.section.trim())||"— No section —"; (bySec[s]=bySec[s]||[]).push(t); });
+    const secOrder=sectionsFor(dept);
+    const secKeys=[...secOrder.filter(s=>bySec[s]), ...Object.keys(bySec).filter(s=>!secOrder.includes(s))];
+    const sectionsHTML = secKeys.map(sec=>{
+      const arr=bySec[sec];
+      return `<div class="section-head" style="border-left-color:${dc};background:${dc}0d">
+          <span class="sh-name" style="color:${dc}">${sec}</span>
+          <span class="sh-count">${arr.length} task${arr.length===1?'':'s'}</span>
+        </div>
+        ${arr.map(manageCard).join("")}`;
+    }).join("");
     return `<div class="deptblock">
       <div class="dept-head" style="--dc:${dc};--dcs:${dc}14">
         <span class="dept-name">${dept}</span>
         <span class="dept-count">${items.length} task${items.length===1?'':'s'}</span>
       </div>
-      ${items.map(t=>{
-        const u=dueUrgency(t); const [role,who]=nextAction(t);
-        let urgFlag="";
-        if(u.level==="overdue") urgFlag=`<span class="urg-flag urg-overdue"><span class="pd"></span>${Math.abs(u.days)}d overdue</span>`;
-        else if(u.level==="urgent") urgFlag=`<span class="urg-flag urg-urgent"><span class="pd"></span>due in ${u.days}d</span>`;
-        else if(u.level==="soon") urgFlag=`<span class="urg-flag urg-soon">due in ${u.days}d</span>`;
-        const tip = u.level!=="normal" ? `<div class="due-tip"><div class="cd">${u.level==="overdue"?Math.abs(u.days)+" days":u.days+" days"}<small>${u.level==="overdue"?" overdue":" to deadline"}</small></div><div class="nx">Next move sits with <b>${role}: ${who||"unassigned"}</b>. Due ${fmt(t.due)}.</div></div>`:"";
-        return `
+      ${sectionsHTML}
+    </div>`;
+  }).join("");
+}
+
+function manageCard(t){
+  const u=dueUrgency(t); const [role,who]=nextAction(t);
+  let urgFlag="";
+  if(u.level==="overdue") urgFlag=`<span class="urg-flag urg-overdue"><span class="pd"></span>${Math.abs(u.days)}d overdue</span>`;
+  else if(u.level==="urgent") urgFlag=`<span class="urg-flag urg-urgent"><span class="pd"></span>due in ${u.days}d</span>`;
+  else if(u.level==="soon") urgFlag=`<span class="urg-flag urg-soon">due in ${u.days}d</span>`;
+  const tip = u.level!=="normal" ? `<div class="due-tip"><div class="cd">${u.level==="overdue"?Math.abs(u.days)+" days":u.days+" days"}<small>${u.level==="overdue"?" overdue":" to deadline"}</small></div><div class="nx">Next move sits with <b>${role}: ${who||"unassigned"}</b>. Due ${fmt(t.due)}.</div></div>`:"";
+  return `
         <div class="tcard" data-urg="${u.level}">
           ${tip}
           <div class="tcard-top">
             <div class="title"><h4>${t.title}</h4><p>${t.desc||""}</p>
-              <div class="meta">${t.section?`<span class="chip sec-chip">▸ ${t.section}</span>`:''} ${prioChip(t.prio)} ${urgFlag} ${t.needsUpdate?'<span class="chip needs-update">↩ needs update</span>':''} ${t.approved?'<span class="chip approved-flag">✓ approved</span>':'<span class="chip">pending approval</span>'}</div>
+              <div class="meta">${prioChip(t.prio)} ${urgFlag} ${t.needsUpdate?'<span class="chip needs-update">↩ needs update</span>':''} ${t.approved?'<span class="chip approved-flag">✓ approved</span>':'<span class="chip">pending approval</span>'}</div>
             </div>
             <div>${statusPill(t.status)}</div>
           </div>
@@ -1211,9 +1234,7 @@ function renderManage(){
               <button class="btn btn-danger btn-sm" data-remove="${t.id}" ${mgmtUnlocked?'':'disabled'}>Remove</button>
             </div>
           </div>
-        </div>`;}).join("")}
-    </div>`;
-  }).join("");
+        </div>`;
 }
 
 function renderUpdateQueue(){
