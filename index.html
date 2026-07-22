@@ -152,6 +152,7 @@ textarea{resize:vertical;min-height:72px}
 .st-done{background:var(--done)}.st-prog{background:var(--prog)}.st-delay{background:var(--delay)}.st-notstart{background:var(--notstart)}
 .st-init{background:#A855F7}.st-near{background:#0EA5E9}
 .approved-flag{background:var(--a-soft);color:var(--a);border:1px solid #B8E0DB}
+.sec-chip{background:var(--a-soft);color:var(--a);border:1px solid #B8E0DB;font-weight:700}
 .matrix-strip{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--hair-2)}
 .ms-cell{padding:9px 11px;border-right:1px solid var(--hair-2);min-height:54px}
 .ms-cell:last-child{border-right:none}
@@ -449,10 +450,14 @@ footer a:hover{color:#fff;text-decoration:underline}
         <button class="btn btn-ghost btn-sm" id="exitEdit" style="margin-left:auto;padding:5px 11px">Cancel update</button>
       </div>
 
-      <div class="grid g2">
+      <div class="grid g3">
         <div class="field">
           <label>Department <span class="dot" style="background:var(--o)"></span></label>
           <select id="f-dept"></select>
+        </div>
+        <div class="field">
+          <label>Section <span class="dot" style="background:var(--a)"></span></label>
+          <select id="f-section"></select>
         </div>
         <div class="field">
           <label>Priority</label>
@@ -719,32 +724,39 @@ footer a:hover{color:#fff;text-decoration:underline}
 const CONFIG = {
   /* Paste your Apps Script Web App URL here to enable live sync.
      Leave empty ("") to run standalone on this device. */
-  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbw7eNEXUAfkVUQdvVQbHzKs1DO8Xe23kIQYtwWletEwaSk2nMHxYMTcrZdO5L9UWFI1/exec",
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwya46uRwzh_Hok645YwH0gDGbi45sNgrJLAy2SyEdy70HuYNsJswWUKszsN_f63ikR/exec",
 
-  /* ---- ACCESS PASSWORDS ----
-     Change these two lines to set your own passwords. They work directly and
-     reliably in every browser (this is what actually lets people in).        */
-  SITE_PASS: "orsvai2026",     // tier 1 — enter the site & view every tab
-  MGMT_PASS: "orsvai-board",   // tier 2 — approve / edit / verify / remove
-  OWNER_PASS: "orsvai-owner",  // tier 3 — Export / Restore backup (Owner only)
+  /* ---- ACCESS PASSWORDS (Org B) ---- */
+  SITE_PASS: "orgb2026",     // tier 1 — enter the site & view every tab
+  MGMT_PASS: "orgb-board",   // tier 2 — approve / edit / verify / remove
+  OWNER_PASS: "orgb-owner",  // tier 3 — Export / Restore backup (Owner only)
 
-  /* Optional hashed equivalents (kept for compatibility; the plain passwords
-     above are the primary check). */
-  SITE_HASH: "3b370bf39e9e54e2c5f1ef5b533908b72ccc3b1846ea9768fd80b9fbd5fb2f31",
-  MGMT_HASH: "22ace2598449d48a1400377ee95cc862800261ced4fb5d5246e1ea66a59d24d0",
-  OWNER_HASH: "19b3fa588e1379539d733eb010a418b0c4ce1f276d8ed4a12c2f9832b6965f9b"
+  SITE_HASH: "941276d41da2198545635e4f59ce42763a3a1a516fdd2716a2728a74aebcb1be",
+  MGMT_HASH: "a197852155de80c32752125b57163c41ac4e66f43758aa20f1611ce88d4e706a",
+  OWNER_HASH: "05bcb09e16cc237996fae16eae710a085b952f08606fb5f8a121ef7099bc960a"
 };
 
 /* ============================================================
-   DEPARTMENTS  —  edit this list freely.
-   ✅ Put ONE department per line. No quotes, no commas needed.
-   ✅ To add: type a new line.   To remove: delete the line.
+   DEPARTMENTS & SECTIONS  —  edit this list freely.
+   ✅ One DEPARTMENT per line, then a colon ":" , then its SECTIONS
+      separated by commas.   Format:  Department: Section, Section, Section
+   ✅ To add a department → add a new line.
+   ✅ To add a section → add it after the colon, separated by a comma.
    ⚠️ Only rule: keep the two backtick marks  `  at the start and end.
    ============================================================ */
-const DEPARTMENTS = `
-Raw Materials Warehouse
-Finished Goods Warehouse
-`.split("\n").map(s => s.trim()).filter(Boolean);
+const DEPT_SECTION_TEXT = `
+Raw Materials Warehouse: Material Receiving, Storage Management, Inventory Control, Material Issue, Warehouse Management
+Finished Goods Warehouse: Finished Goods Receiving, Finished Goods Storage, Shipment Preparation, Shipment, Warehouse Management
+`;
+const DEPARTMENTS_SECTIONS = {};
+DEPT_SECTION_TEXT.split("\n").map(l => l.trim()).filter(Boolean).forEach(line => {
+  const idx = line.indexOf(":");
+  const dept = (idx >= 0 ? line.slice(0, idx) : line).trim();
+  const secs = idx >= 0 ? line.slice(idx + 1).split(",").map(s => s.trim()).filter(Boolean) : [];
+  if (dept) DEPARTMENTS_SECTIONS[dept] = secs;
+});
+const DEPARTMENTS = Object.keys(DEPARTMENTS_SECTIONS);
+function sectionsFor(dept){ return DEPARTMENTS_SECTIONS[dept] || []; }
 
 const STATUS = {
   "Not Started":    {score:0,  cls:"st-notstart",seg:"seg-notstart",color:"#EF4444"},
@@ -1127,6 +1139,15 @@ function renderShellKpis(){
 
 function renderEntryDept(){
   document.getElementById("f-dept").innerHTML = DEPARTMENTS.map(d=>`<option>${d}</option>`).join("");
+  renderSections();
+}
+function renderSections(selected){
+  const dept = document.getElementById("f-dept").value;
+  const secs = sectionsFor(dept);
+  const sel = document.getElementById("f-section");
+  sel.innerHTML = secs.length
+    ? secs.map(s=>`<option ${s===selected?'selected':''}>${s}</option>`).join("")
+    : `<option value="">— no sections —</option>`;
 }
 
 function statusPill(s){ return `<span class="status-pill ${STATUS[s].cls}">${s}</span>`; }
@@ -1173,7 +1194,7 @@ function renderManage(){
           ${tip}
           <div class="tcard-top">
             <div class="title"><h4>${t.title}</h4><p>${t.desc||""}</p>
-              <div class="meta">${prioChip(t.prio)} ${urgFlag} ${t.needsUpdate?'<span class="chip needs-update">↩ needs update</span>':''} ${t.approved?'<span class="chip approved-flag">✓ approved</span>':'<span class="chip">pending approval</span>'}</div>
+              <div class="meta">${t.section?`<span class="chip sec-chip">▸ ${t.section}</span>`:''} ${prioChip(t.prio)} ${urgFlag} ${t.needsUpdate?'<span class="chip needs-update">↩ needs update</span>':''} ${t.approved?'<span class="chip approved-flag">✓ approved</span>':'<span class="chip">pending approval</span>'}</div>
             </div>
             <div>${statusPill(t.status)}</div>
           </div>
@@ -1399,7 +1420,7 @@ function completedCard(t,{verify=false,reopen=false,restore=false}={}){
   return `<div class="tcard" style="${restore?'opacity:.92':''}">
     <div class="tcard-top">
       <div class="title"><h4>${t.title}</h4><p>${t.desc||""}</p>
-        <div class="meta"><span class="chip">${t.dept}</span>${flag}<span class="chip">completed ${fmt(t.completedDate)}</span>${deliveryBadge(t)}</div>
+        <div class="meta"><span class="chip">${t.dept}</span>${t.section?`<span class="chip sec-chip">▸ ${t.section}</span>`:''}${flag}<span class="chip">completed ${fmt(t.completedDate)}</span>${deliveryBadge(t)}</div>
       </div><div>${statusPill(t.status)}</div>
     </div>
     ${matrixStrip(t)}
@@ -1472,6 +1493,7 @@ document.getElementById("tabs").addEventListener("click",e=>{
 function recalcDur(){ const d=daysBetween(document.getElementById("f-start").value,document.getElementById("f-due").value); document.getElementById("f-dur").value = d!=null? d+" days":""; }
 document.getElementById("f-start").addEventListener("change",recalcDur);
 document.getElementById("f-due").addEventListener("change",recalcDur);
+document.getElementById("f-dept").addEventListener("change",()=>renderSections());
 
 // actual completion date — only relevant when the task is Completed
 function syncCompletedField(){
@@ -1503,6 +1525,7 @@ const addBtn=document.getElementById("addTask");
 function readForm(){
   return {
     dept:document.getElementById("f-dept").value,
+    section:document.getElementById("f-section").value,
     title:document.getElementById("f-title").value.trim(),
     desc:document.getElementById("f-desc").value.trim(),
     prio:document.getElementById("f-prio").value, status:document.getElementById("f-status").value,
@@ -1515,6 +1538,7 @@ function readForm(){
 }
 function fillForm(t){
   document.getElementById("f-dept").value=t.dept; document.getElementById("f-title").value=t.title;
+  renderSections(t.section);
   document.getElementById("f-desc").value=t.desc||""; document.getElementById("f-prio").value=t.prio;
   document.getElementById("f-status").value=t.status; document.getElementById("f-start").value=t.start||"";
   document.getElementById("f-due").value=t.due||""; recalcDur();
@@ -1560,7 +1584,7 @@ addBtn.addEventListener("click", async ()=>{
   TASKS.push(task); persistLocal(TASKS); await Store.save(task);
   renderAll(); clearForm(); toast("Task added — pending approval in Tab 2");
 });
-function clearForm(){ ["f-title","f-desc","f-O","f-R","f-S","f-V","f-A","f-I","f-start","f-due","f-dur","f-actual"].forEach(id=>document.getElementById(id).value=""); document.getElementById("f-prio").value="Medium"; document.getElementById("f-status").value="Not Started"; syncCompletedField(); }
+function clearForm(){ ["f-title","f-desc","f-O","f-R","f-S","f-V","f-A","f-I","f-start","f-due","f-dur","f-actual"].forEach(id=>document.getElementById(id).value=""); document.getElementById("f-prio").value="Medium"; document.getElementById("f-status").value="Not Started"; renderSections(); syncCompletedField(); }
 document.getElementById("clearForm").addEventListener("click",clearForm);
 
 // management actions (delegated)
