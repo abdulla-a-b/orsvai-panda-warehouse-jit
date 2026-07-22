@@ -543,12 +543,11 @@ footer a:hover{color:#fff;text-decoration:underline}
       </div>
       <div class="lock-note" id="manageLock">🔒 Management actions (Approve / Remove) are locked. <a href="#" id="unlockBtn" style="color:var(--v);font-weight:700;margin-left:4px">Unlock with key</a></div>
       <div class="dept-sort">
-        <label for="deptSort">Sort departments:</label>
-        <select id="deptSort">
-          <option value="az">Name — A to Z</option>
-          <option value="za">Name — Z to A</option>
-          <option value="count">Most tasks first</option>
-        </select>
+        <label for="deptFilter">Department:</label>
+        <select id="deptFilter"></select>
+        <label for="sectionFilter" style="margin-left:8px">Section:</label>
+        <select id="sectionFilter"></select>
+        <button class="btn btn-ghost btn-sm" id="filterReset" style="margin-left:6px;padding:7px 12px">Show all</button>
       </div>
       <div id="manageList"></div>
     </div>
@@ -1130,7 +1129,6 @@ function deptColor(dept){
   if(idx<0){ idx=0; for(let i=0;i<dept.length;i++) idx=(idx+dept.charCodeAt(i))%DEPT_COLORS.length; } // stable hash for unlisted
   return DEPT_COLORS[idx % DEPT_COLORS.length];
 }
-let deptSortMode="az";
 
 function renderShellKpis(){
   const A=active();
@@ -1168,25 +1166,26 @@ function matrixStrip(t){
 function renderManage(){
   const wrap=document.getElementById("manageList");
   document.getElementById("manageLock").style.display = mgmtUnlocked? "none":"flex";
-  const A=active().filter(t=>t.status!=="Completed");
-  if(!A.length){ wrap.innerHTML=`<div class="empty"><div class="ico">📋</div>No open tasks in the review queue. Completed work is in the <b>Completed</b> tab; add new tasks in Tab 1.</div>`; return; }
+  const df=(document.getElementById("deptFilter")||{}).value || "";
+  const sf=(document.getElementById("sectionFilter")||{}).value || "";
+  let A=active().filter(t=>t.status!=="Completed");
+  if(df) A=A.filter(t=>t.dept===df);
+  if(sf) A=A.filter(t=>((t.section||"").trim())===sf);
+  if(!A.length){
+    const scope = df ? (sf ? `${df} › ${sf}` : df) : "the review queue";
+    wrap.innerHTML=`<div class="empty"><div class="ico">📋</div>No open tasks in ${scope}. ${df||sf?'Try "Show all", or a':'A'}dd new tasks in Tab 1.</div>`; return;
+  }
   const byDept={};
   A.forEach(t=>{(byDept[t.dept]=byDept[t.dept]||[]).push(t);});
-  // near-deadline tasks float to the top of each department
   const urgRank={overdue:0,urgent:1,soon:2,normal:3};
-  // department ordering per the sort control
-  let deptKeys=Object.keys(byDept);
-  if(deptSortMode==="za") deptKeys.sort((a,b)=>b.localeCompare(a));
-  else if(deptSortMode==="count") deptKeys.sort((a,b)=>byDept[b].length-byDept[a].length || a.localeCompare(b));
-  else deptKeys.sort((a,b)=>a.localeCompare(b));
+  let deptKeys=Object.keys(byDept).sort((a,b)=>a.localeCompare(b));
   wrap.innerHTML = deptKeys.map(dept=>{
     const items=byDept[dept].sort((a,b)=>urgRank[dueUrgency(a).level]-urgRank[dueUrgency(b).level]);
     const dc=deptColor(dept);
-    // group this department's tasks by section (in the department's defined order)
+    // group this department's tasks by section (alphabetical)
     const bySec={};
     items.forEach(t=>{ const s=(t.section&&t.section.trim())||"— No section —"; (bySec[s]=bySec[s]||[]).push(t); });
-    const secOrder=sectionsFor(dept);
-    const secKeys=[...secOrder.filter(s=>bySec[s]), ...Object.keys(bySec).filter(s=>!secOrder.includes(s))];
+    let secKeys=Object.keys(bySec).sort((a,b)=>a.localeCompare(b));
     const sectionsHTML = secKeys.map(sec=>{
       const arr=bySec[sec];
       return `<div class="section-head" style="border-left-color:${dc};background:${dc}0d">
@@ -1652,9 +1651,24 @@ document.getElementById("archiveList").addEventListener("click", async e=>{
   if(rs){ const t=TASKS.find(x=>x.id===rs.dataset.restore); t.archived=false; persistLocal(TASKS); await Store.update(t.id,{archived:false}); renderAll(); renderArchive(); toast("Restored to active board"); }
 });
 
-// department sort (Tab 2)
-document.getElementById("deptSort").addEventListener("change",e=>{
-  deptSortMode=e.target.value; renderManage();
+// department & section FILTERS (Tab 2) — choose a department, then a section
+function fillDeptFilter(){
+  const sel=document.getElementById("deptFilter");
+  const cur=sel.value;
+  sel.innerHTML = `<option value="">All departments</option>` + DEPARTMENTS.map(d=>`<option ${d===cur?'selected':''}>${d}</option>`).join("");
+  fillSectionFilter();
+}
+function fillSectionFilter(){
+  const dept=document.getElementById("deptFilter").value;
+  const sel=document.getElementById("sectionFilter");
+  const secs = dept ? sectionsFor(dept) : [];
+  sel.innerHTML = `<option value="">All sections</option>` + secs.map(s=>`<option>${s}</option>`).join("");
+  sel.disabled = !dept;   // pick a department first
+}
+document.getElementById("deptFilter").addEventListener("change",()=>{ fillSectionFilter(); renderManage(); });
+document.getElementById("sectionFilter").addEventListener("change",renderManage);
+document.getElementById("filterReset").addEventListener("click",()=>{
+  document.getElementById("deptFilter").value=""; fillSectionFilter(); renderManage();
 });
 
 // period toggle
@@ -1799,6 +1813,7 @@ async function repairCompletedDates(){
 /* ---------- boot ---------- */
 (async function init(){
   renderEntryDept();
+  fillDeptFilter();
   document.getElementById("f-start").value=todayISO();
   TASKS = await Store.load();
   await repairCompletedDates();
